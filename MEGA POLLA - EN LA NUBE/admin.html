@@ -5,11 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - MEGA POLLA</title>
     <link rel="stylesheet" href="styles.css"> 
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .btn-editar, .btn-guardar, .btn-eliminar {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-editar {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .btn-guardar {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-eliminar {
+            background-color: #dc3545;
+            color: white;
+        }
+        .editable-input {
+            padding: 5px;
+            margin: 0 2px;
+            width: auto;
+            display: inline-block;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: #333;
+            font-family: 'Montserrat', sans-serif;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
+
     <header>
         <h1>PANEL DE CONTROL</h1>
+        <p>Administración de Sorteos y Participantes</p>
     </header>
 
     <div class="admin-container card">
@@ -28,16 +64,51 @@
 
     <div class="admin-container card">
         <h3>Registrar Nuevo Participante:</h3>
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">
+            Separa los números con comas. Puedes registrar varias jugadas a la vez usando una barra vertical (|).
+        </p>
         <form id="form-participante">
-            <input type="number" id="correlativo" placeholder="Nro Correlativo" required>
+            <input type="number" id="correlativo" placeholder="Nro Correlativo (Ej: 101)" required>
             <input type="text" id="nombre-participante" placeholder="Nombre del Participante" required>
-            <input type="text" id="referencia" placeholder="REFE / Teléfono" required>
-            <input type="text" id="jugadas-procesadas" placeholder="01,02,03,04,05,06,07" required>
+            <input type="text" id="referencia" placeholder="REFE / Teléfono / Vendedor" required>
+            
+            <input type="text" id="jugadas-procesadas" 
+                         placeholder="Ej: 09,19,29,20,25,35,45 | 08,18,28,29,30,40,50" 
+                         required>
+            
+            <input type="hidden" id="notas-correccion" value=""> 
+
             <button type="submit">Registrar Participante</button>
         </form>
         
-        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white; margin-top: 20px; width: 100%;">🔴 Reiniciar Todo</button>
+        <h3>Participantes Actuales (Cada línea es una jugada registrada):</h3>
+        
+        <div id="participantes-search-bar">
+            <input type="text" 
+                         id="input-buscar-participante" 
+                         placeholder="🔍 Buscar por Nombre o REFE..." 
+                         >
+        </div>
+        <ul id="lista-participantes"></ul>
     </div>
+    
+    <hr style="border-color: #fdd835; margin: 30px 0;">
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white;">
+            🔴 Reiniciar Partidas y Resultados
+        </button>
+        <button id="btn-deshacer" style="background-color: #6c757d; color: white; margin-top: 10px; padding: 10px; border: none; border-radius: 4px; cursor: pointer; display: none;">
+            ↩️ Deshacer Último Reinicio
+        </button>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 40px;">
+        <a href="index.html" style="color: #fdd835; text-decoration: none; font-weight: bold;">
+            ← Volver a la Vista Pública
+        </a>
+    </div>
+
     <script src="admin-script.js"></script>
 </body>
 </html>
