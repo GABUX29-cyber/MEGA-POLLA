@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // CONFIGURACIÓN SUPABASE
+    // --- CONEXIÓN SUPABASE ---
     const SUPABASE_URL = 'https://ymvpaooxdqhayzcumrpj.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CARGA DE DATOS DESDE SUPABASE
+    // Carga de datos desde Supabase (Reemplaza a localStorage)
     const { data: resDB } = await _supabase.from('resultados').select('*');
     const { data: partDB } = await _supabase.from('participantes').select('*');
     const { data: finDB } = await _supabase.from('finanzas').select('*').single();
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderRanking(filtro = '') {
         const body = document.getElementById('ranking-body');
         body.innerHTML = '';
+        
         const rankingCalculado = participantesData.map(p => ({
             ...p,
             aciertos: calcularAciertos(p.jugadas, resultadosDelDia)
@@ -76,12 +77,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Inicialización y Filtro (Mantenido)
+    function configurarFiltro() {
+        const filtroInput = document.getElementById('filtroParticipantes');
+        if (filtroInput) {
+            filtroInput.addEventListener('keyup', (e) => {
+                renderRanking(e.target.value.trim()); 
+            });
+        }
+    }
+
+    // --- INICIALIZACIÓN ---
     actualizarFinanzasYEstadisticas(); 
     renderResultadosDia();
     renderRanking();
-    document.getElementById('filtroParticipantes').addEventListener('keyup', (e) => renderRanking(e.target.value.trim()));
+    configurarFiltro();
     
-    // PDF (Mantenido)
-    document.getElementById('btn-descargar-pdf').addEventListener('click', () => { window.print(); });
+    // --- TU LÓGICA DE PDF ORIGINAL ---
+    const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
+    if (btnDescargarPdf) {
+        btnDescargarPdf.addEventListener('click', () => {
+            window.print();
+        });
+    }
 });
