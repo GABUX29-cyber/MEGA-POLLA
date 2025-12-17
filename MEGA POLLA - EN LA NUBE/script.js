@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let resultadosDelDia = [];
     const JUGADA_SIZE = 7; 
 
-    // Función para la Fecha Actual
     function establecerFechaReal() {
         const headerP = document.querySelector('header p');
         if (headerP) {
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             inicializarSistema();
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error cargando nube:", error);
         }
     }
 
@@ -62,28 +61,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- RENDERIZADO DE RESULTADOS (CUADRO SIEMPRE FIJO) ---
+    // --- RENDERIZADO DE RESULTADOS (FORMATO CUADRO/TABLA SIN CÍRCULOS) ---
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
 
-        // Si no hay resultados todavía, mostramos círculos con "--"
+        container.innerHTML = ''; 
+
+        // Si no hay resultados, mostramos espacios vacíos elegantes
         if (resultadosAdmin.length === 0) {
-            container.innerHTML = `
-                <div class="resultado-item"><span class="sorteo-name">Sorteo 1</span><span class="numero-ball">--</span></div>
-                <div class="resultado-item"><span class="sorteo-name">Sorteo 2</span><span class="numero-ball">--</span></div>
-                <div class="resultado-item"><span class="sorteo-name">Sorteo 3</span><span class="numero-ball">--</span></div>
-            `;
+            for(let i=1; i<=3; i++) {
+                container.innerHTML += `
+                    <div class="resultado-item-cuadro">
+                        <span class="sorteo-titulo">Sorteo ${i}</span>
+                        <div class="numero-cuadro">--</div>
+                    </div>`;
+            }
             return;
         }
 
-        container.innerHTML = ''; 
+        // Renderizamos cada resultado como un cuadro rectangular
         resultadosAdmin.forEach(res => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'resultado-item';
+            itemDiv.className = 'resultado-item-cuadro';
             itemDiv.innerHTML = `
-                <span class="sorteo-name">${res.sorteo}</span>
-                <span class="numero-ball">${res.numero.toString().padStart(2, '0')}</span>
+                <span class="sorteo-titulo">${res.sorteo}</span>
+                <div class="numero-cuadro">${res.numero.toString().padStart(2, '0')}</div>
             `;
             container.appendChild(itemDiv);
         });
@@ -98,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         let totalGanadores = 0;
 
         participantesData.forEach(p => {
-            // Calcular aciertos comparando con resultadosDelDia
             let aciertos = 0;
             p.jugadas.forEach(num => {
                 if (resultadosDelDia.includes(String(num).padStart(2, '0'))) aciertos++;
