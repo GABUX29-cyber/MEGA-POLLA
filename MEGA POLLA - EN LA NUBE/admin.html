@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin MEGA POLLA</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="login-box" class="card" style="max-width:400px; margin:100px auto; padding:30px; text-align:center;">
+        <h2>🔐 Acceso Admin</h2>
+        <input type="email" id="email" placeholder="Correo" style="width:100%; margin-bottom:10px; padding:10px;">
+        <input type="password" id="pass" placeholder="Contraseña" style="width:100%; margin-bottom:20px; padding:10px;">
+        <button onclick="login()" style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:5px;">Entrar</button>
+    </div>
+
+    <div id="admin-content" style="display:none; width:95%; max-width:900px;">
+        <header>
+            <h1>PANEL DE CONTROL</h1>
+            <button onclick="logout()" style="background:red; color:white; padding:5px 10px; border-radius:5px;">Cerrar Sesión</button>
+        </header>
+
+        <div class="admin-section card">
+            <h3>Cargar Resultado</h3>
+            <input type="text" id="sorteo" placeholder="Ej: GRANJITA 10AM">
+            <input type="text" id="numero" placeholder="Número">
+            <button onclick="subirResultado()">Publicar</button>
+        </div>
+
+        <div class="admin-section card">
+            <h3>Registrar Participante</h3>
+            <input type="number" id="p-nro" placeholder="Nro">
+            <input type="text" id="p-nombre" placeholder="Nombre">
+            <input type="text" id="p-refe" placeholder="Referencia">
+            <input type="text" id="p-jugadas" placeholder="Números separados por coma (ej: 01,02,03,04,05,06,07)">
+            <button onclick="subirParticipante()">Guardar Jugador</button>
+        </div>
+
+        <div class="admin-section card">
+            <h3>Limpiar Datos (Nueva Jornada)</h3>
+            <button onclick="reiniciarTodo()" style="background:orange; color:black;">Borrar Resultados y Jugadores</button>
+        </div>
+    </div>
+    <script src="admin-script.js"></script>
+</body>
+</html>

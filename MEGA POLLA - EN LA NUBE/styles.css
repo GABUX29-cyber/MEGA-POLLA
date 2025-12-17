@@ -1,0 +1,183 @@
+/* ========================================================= */
+/* 1. ESTILOS GENERALES Y LAYOUT BASE                       */
+/* ========================================================= */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #212121; /* Fondo gris oscuro */
+    color: #eee; 
+    margin: 0;
+    padding: 15px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Forzar texto oscuro en tarjetas blancas */
+.card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
+    color: #333; 
+}
+
+header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 15px 10px;
+    background-color: #fdd835;
+    color: #333;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #333;
+    font-size: 2.2em; 
+    margin-bottom: 5px;
+    font-weight: 800;
+}
+
+/* ========================================================= */
+/* 2. ESTILOS DEL LOGIN (NUEVO)                              */
+/* ========================================================= */
+#login-box {
+    border-top: 5px solid #fdd835;
+}
+
+#login-box input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+#login-box button {
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.2s;
+}
+
+#login-box button:hover {
+    transform: scale(1.02);
+    background-color: #218838;
+}
+
+/* ========================================================= */
+/* 3. CONTENEDORES Y TARJETAS                                */
+/* ========================================================= */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 25px;
+}
+
+.card-container.full-width {
+    display: flex;
+    justify-content: center;
+}
+
+.card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+/* ========================================================= */
+/* 4. RESULTADOS Y RANKING                                   */
+/* ========================================================= */
+.resultados-grilla div {
+    font-size: 0.9em;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.card.ranking table {
+    width: 100%;
+    border-collapse: separate; 
+    border-spacing: 0;
+}
+
+.card.ranking thead th {
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    font-size: 0.8em;
+}
+
+.ranking-box { 
+    display: inline-block;
+    background-color: #f0f0f0; 
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 8px; 
+    font-weight: 600;
+    color: #333;
+}
+
+.jugada-acierto .ranking-box {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-color: #1e7e34;
+}
+
+.aciertos-box {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+}
+
+.ganador-final {
+    color: #28a745;
+    font-weight: 900;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ========================================================= */
+/* 5. ESTADÍSTICAS                                           */
+/* ========================================================= */
+.card.estadistica {
+    text-align: center;
+}
+
+.card.estadistica .valor {
+    font-size: 1.5em;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.ventas .valor { color: #f9a825; }
+.recaudado .valor { color: #28a745; }
+.acumulado .valor { color: #007bff; }
+.repartir .valor { color: #dc3545; }
+
+/* ========================================================= */
+/* 6. RESPONSIVE                                             */
+/* ========================================================= */
+@media (max-width: 768px) {
+    .card-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .card.ranking table {
+        font-size: 0.7em;
+    }
+}
