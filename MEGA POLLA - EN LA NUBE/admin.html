@@ -5,67 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - MEGA POLLA</title>
     <link rel="stylesheet" href="styles.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .btn-editar, .btn-guardar, .btn-eliminar { margin-left: 10px; padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px; }
-        .btn-editar { background-color: #ffc107; color: #333; }
-        .btn-guardar { background-color: #28a745; color: white; }
-        .btn-eliminar { background-color: #dc3545; color: white; }
-        .editable-input { padding: 5px; margin: 0 2px; width: auto; display: inline-block; background-color: #f0f0f0; border: 1px solid #ccc; color: #333; font-family: 'Montserrat', sans-serif; border-radius: 4px; }
+        .btn-eliminar { background-color: #dc3545; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 4px; margin-left: 10px;}
     </style>
 </head>
 <body>
     <header>
-        <h1>Panel de Administración</h1>
-        <p>Gestiona los resultados y participantes de MEGA POLLA</p>
+        <h1>PANEL DE CONTROL</h1>
+        <p>Administración de Sorteos y Participantes</p>
     </header>
 
-    <div class="admin-section">
-        <h2>1. Configuración de Finanzas</h2>
-        <form id="form-finanzas">
-            <label>Ventas Totales:</label> <input type="number" id="input-ventas" required>
-            <label>Recaudado (BS):</label> <input type="number" step="0.01" id="input-recaudado" required>
-            <label>Acumulado Anterior (BS):</label> <input type="number" step="0.01" id="input-acumulado" required>
-            <button type="submit">Actualizar Finanzas</button>
-        </form>
-    </div>
-
-    <div class="admin-section">
-        <h2>2. Resultados del Sorteo</h2>
+    <div class="admin-container card">
+        <h3>Cargar Resultado:</h3>
         <form id="form-resultados">
-            <select id="select-sorteo" required>
-                <option value="Sorteo 1">Sorteo 1</option>
-                <option value="Sorteo 2">Sorteo 2</option>
-                <option value="Sorteo 3">Sorteo 3</option>
-                <option value="Sorteo 4">Sorteo 4</option>
-                <option value="Sorteo 5">Sorteo 5</option>
-                <option value="Sorteo 6">Sorteo 6</option>
-                <option value="Sorteo 7">Sorteo 7</option>
-            </select>
-            <input type="text" id="input-numero" placeholder="Número" maxlength="2" required>
-            <button type="submit">Guardar Resultado</button>
+            <input type="text" id="sorteo-nombre" placeholder="Sorteo (Ej: Granjita 10AM)" required>
+            <input type="text" id="numero-ganador" placeholder="Número (Ej: 25)" required>
+            <button type="submit">Publicar</button>
         </form>
-        <ul id="lista-resultados"></ul>
+        <ul id="lista-resultados-admin"></ul>
     </div>
 
-    <div class="admin-section">
-        <h2>3. Registro de Participantes</h2>
-        <form id="form-participantes">
+    <div class="admin-container card">
+        <h3>Registrar Participante (Pega aquí con |):</h3>
+        <form id="form-participante">
+            <input type="number" id="correlativo" placeholder="Nro Correlativo" required>
             <input type="text" id="nombre-participante" placeholder="Nombre" required>
-            <input type="text" id="refe-participante" placeholder="REFE" required>
-            <input type="text" id="jugadas-procesadas" placeholder="Ej: 01,02,03,04,05,06,07" required>
-            <button type="submit">Registrar Participante</button>
+            <input type="text" id="referencia" placeholder="Referencia" required>
+            <input type="text" id="jugadas-procesadas" placeholder="01,02,03... | 10,11,12..." required>
+            <button type="submit">Registrar</button>
         </form>
         <ul id="lista-participantes"></ul>
     </div>
-
-    <div style="text-align: center; margin: 20px;">
-        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white;">🔴 Reiniciar Todo</button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const _supabase = supabase.createClient('https://ymvpaooxdqhayzcumrpj.supabase.co', 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy');
-    </script>
     <script src="admin-script.js"></script>
 </body>
 </html>
