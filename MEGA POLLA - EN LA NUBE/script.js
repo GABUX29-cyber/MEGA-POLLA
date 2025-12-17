@@ -16,12 +16,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const JUGADA_SIZE = 7; 
     let rankingCalculado = []; 
 
-    // Función para poner la FECHA ACTUAL (Sin número de edición)
+    // Función para poner la FECHA ACTUAL (Sin edición)
     function establecerFechaReal() {
         const headerP = document.querySelector('header p');
         if (headerP) {
             const ahora = new Date();
-            // Formato: miércoles, 17 de diciembre de 2025 (o el que prefieras)
             const opciones = { 
                 weekday: 'long', 
                 day: '2-digit', 
@@ -29,8 +28,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 year: 'numeric' 
             };
             const fechaFormateada = ahora.toLocaleDateString('es-ES', opciones);
-            
-            // Actualizamos el texto para que solo diga la fecha con un estilo elegante
             headerP.style.textTransform = 'capitalize';
             headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fechaFormateada}`;
         }
@@ -40,18 +37,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function cargarDatosDesdeNube() {
         try {
             // 1. Obtener Participantes
-            const { data: p, error: ep } = await _supabase
+            const { data: p } = await _supabase
                 .from('participantes')
                 .select('*')
                 .order('nro', { ascending: true });
             
-            // 2. Obtener Resultados
-            const { data: r, error: er } = await _supabase
+            // 2. Obtener Resultados (Ordenados por ID para mantener el orden de ingreso)
+            const { data: r } = await _supabase
                 .from('resultados')
-                .select('*');
+                .select('*')
+                .order('id', { ascending: true });
             
             // 3. Obtener Finanzas
-            const { data: f, error: ef } = await _supabase
+            const { data: f } = await _supabase
                 .from('finanzas')
                 .select('*')
                 .single();
@@ -63,7 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (f) finanzasData = f;
 
-            // Procesamos la lógica
             inicializarSistema();
 
         } catch (error) {
@@ -85,10 +82,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function calcularAciertos(jugadorJugadas, ganadores) {
         let aciertos = 0;
-        const ganadoresSet = new Set(ganadores.map(String)); 
+        const ganadoresSet = new Set(ganadores.map(num => String(num).padStart(2, '0'))); 
         
         jugadorJugadas.forEach(num => {
-            if (ganadoresSet.has(String(num).padStart(2, '0')) || ganadoresSet.has(String(num))) {
+            if (ganadoresSet.has(String(num).padStart(2, '0'))) {
                 aciertos++;
             }
         });
@@ -111,6 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // RENDERIZADO DE LOS RESULTADOS (DISEÑO ORIGINAL DE BOLAS)
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
@@ -120,15 +118,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        container.innerHTML = ''; 
+        container.innerHTML = ''; // Limpiamos
+        
+        // Creamos la lista de bolas con su nombre de sorteo arriba, tal como tu diseño original
         resultadosAdmin.forEach(res => {
-            const ball = document.createElement('div');
-            ball.className = 'resultado-item';
-            ball.innerHTML = `
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'resultado-item';
+            
+            itemDiv.innerHTML = `
                 <span class="sorteo-name">${res.sorteo}</span>
                 <span class="numero-ball">${res.numero.toString().padStart(2, '0')}</span>
             `;
-            container.appendChild(ball);
+            container.appendChild(itemDiv);
         });
     }
 
@@ -158,7 +159,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             let jugadasHTML = '';
             for (let i = 0; i < JUGADA_SIZE; i++) {
                 const num = p.jugadas[i] ? p.jugadas[i].toString().padStart(2, '0') : '--';
-                const esGanador = resultadosDelDia.includes(num) || resultadosDelDia.includes(p.jugadas[i]);
+                // Comprobación de acierto para iluminar la celda
+                const esGanador = resultadosDelDia.includes(num);
                 const claseGanador = esGanador ? 'hit' : '';
                 jugadasHTML += `<td><span class="ranking-box ${claseGanador}">${num}</span></td>`;
             }
@@ -194,10 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ----------------------------------------------------------------
     // LÓGICA PARA DESCARGAR PDF
-    // ----------------------------------------------------------------
-    
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
@@ -208,6 +207,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // INICIO DE CARGA
     cargarDatosDesdeNube();
 });
