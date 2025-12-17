@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTES Y CONFIGURACIÓN ---
     // ---------------------------------------------------------------------------------------
     const CLAVES_VALIDAS = ['29931335', '24175402'];
-    const NOTA_SIN_CORRECCION = "Jugada sin correcciones automáticas.";
     const JUGADA_SIZE = 7; 
 
     let participantes = [];
@@ -47,17 +46,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function actualizarFinanzasNube() {
+        // Intentamos actualizar la fila con ID 1
         const { error } = await _supabase
             .from('finanzas')
-            .update(finanzas)
-            .eq('id', 1); // Asumiendo que solo hay una fila de finanzas con ID 1
+            .update({
+                ventas: finanzas.ventas,
+                recaudado: finanzas.recaudado,
+                acumulado1: finanzas.acumulado1
+            })
+            .eq('id', 1);
         
-        if (error) alert("Error al actualizar finanzas");
-        else alert("✅ Finanzas actualizadas en la nube");
+        if (error) {
+            console.error(error);
+            alert("Error al actualizar finanzas. Asegúrate de que exista una fila con ID 1 en Supabase.");
+        } else {
+            alert("✅ Finanzas actualizadas correctamente en la nube.");
+            cargarDatosDesdeNube(); // Recargamos para confirmar
+        }
     }
 
     // ---------------------------------------------------------------------------------------
-    // --- 3. GESTIÓN DE FORMULARIOS (Tu lógica original) ---
+    // --- 3. GESTIÓN DE FORMULARIOS ---
     // ---------------------------------------------------------------------------------------
 
     // Formulario de Finanzas
@@ -116,9 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|');
 
         jugadasRaw.forEach((jugadaStr, index) => {
+            if(jugadaStr.trim() === "") return;
             const nuevaJugada = {
                 nro: participantes.length + 1,
-                nombre: jugadaStr.trim() === jugadasRaw[0].trim() ? nombre : `${nombre} (Polla ${index + 1})`,
+                nombre: index === 0 ? nombre : `${nombre} (Polla ${index + 1})`,
                 refe: refe,
                 jugadas: jugadaStr.split(',').map(n => n.trim().padStart(2, '0'))
             };
@@ -130,13 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------------------------------------------------------------------------------------
-    // --- 4. RENDERIZADO (Se mantiene igual para que veas tus datos) ---
+    // --- 4. RENDERIZADO (CORREGIDO PARA MOSTRAR DATOS ACTUALES) ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
+        // --- AQUÍ ESTÁ EL CAMBIO: Rellenar los inputs de finanzas con los datos de la nube ---
+        if (finanzas) {
+            document.getElementById('input-ventas').value = finanzas.ventas;
+            document.getElementById('input-recaudado').value = finanzas.recaudado;
+            document.getElementById('input-acumulado').value = finanzas.acumulado1;
+        }
+
         // Render Resultados
         const listaRes = document.getElementById('lista-resultados');
         listaRes.innerHTML = '';
-        resultados.forEach((res, index) => {
+        resultados.forEach((res) => {
             const li = document.createElement('li');
             li.innerHTML = `<span>${res.sorteo}: <strong>${res.numero}</strong></span> 
                            <button class="btn-eliminar" onclick="eliminarResultadoNube(${res.id})">Eliminar</button>`;
@@ -153,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Funciones globales para botones
+    // Funciones globales
     window.eliminarResultadoNube = async (id) => {
         await _supabase.from('resultados').delete().eq('id', id);
         cargarDatosDesdeNube();
@@ -164,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const clave = prompt("Ingrese clave de seguridad para borrar TODO:");
         if (CLAVES_VALIDAS.includes(clave)) {
             if (confirm("¿Estás SEGURO? Esto borrará la base de datos de la nube.")) {
-                await _supabase.from('participantes').delete().neq('nro', 0);
-                await _supabase.from('resultados').delete().neq('numero', 'XX');
+                await _supabase.from('participantes').delete().neq('id', 0);
+                await _supabase.from('resultados').delete().neq('id', 0);
+                alert("Datos reiniciados.");
                 cargarDatosDesdeNube();
             }
         }
