@@ -1,161 +1,340 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1. CONFIGURACIÓN DE CONEXIÓN ---
-    const SUPABASE_URL = 'https://ymvpaooxdqhayzcumrpj.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ---------------------------------------------------------------------------------------
+    // --- CONSTANTES DE CONFIGURACIÓN (MEGA POLLA) ---
+    // ---------------------------------------------------------------------------------------
 
     const CLAVES_VALIDAS = ['29931335', '24175402'];
+    const NOTA_SIN_CORRECCION = "Jugada sin correcciones automáticas.";
+    const JUGADA_SIZE = 7; 
+
+    // --- VARIABLES DE ESTADO ---
     let participantes = [];
     let resultados = [];
-    let finanzas = { ventas: 0, recaudado: 0.00, acumulado: 0.00 };
+    let finanzas = {
+        ventas: 0,
+        recaudado: 0.00,
+        acumulado1: 0.00
+    };
 
-    // --- 2. BLOQUEO DE SEGURIDAD ---
-    const claveAcceso = prompt("🔒 Acceso Administrativo\nIngrese su clave:");
-    if (!CLAVES_VALIDAS.includes(claveAcceso)) {
-        alert("Acceso denegado");
-        window.location.href = "index.html";
-        return;
+    // ---------------------------------------------------------------------------------------
+    // --- A. FUNCIONES DE PERSISTENCIA (SUPABASE) ---
+    // ---------------------------------------------------------------------------------------
+
+    // Carga inicial desde la nube
+    async function cargarDesdeSupabase() {
+        try {
+            const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
+            const { data: r } = await _supabase.from('resultados').select('*');
+            const { data: f } = await _supabase.from('finanzas').select('*').single();
+
+            participantes = p || [];
+            resultados = r || [];
+            if (f) {
+                finanzas = {
+                    ventas: f.ventas,
+                    recaudado: f.recaudado,
+                    acumulado1: f.acumulado1
+                };
+            }
+            renderTodo();
+        } catch (error) {
+            console.error("Error cargando datos:", error);
+        }
     }
 
-    // --- 3. FUNCIONES DE CARGA Y GUARDADO EN SUPABASE ---
-    async function cargarDatosDesdeNube() {
-        const { data, error } = await _supabase.from('polla_datos').select('*');
-        if (error) {
-            console.error("Error al cargar datos:", error);
+    // Guardar finanzas en la nube
+    async function sincronizarFinanzas() {
+        await _supabase.from('finanzas').upsert({ 
+            id: 1, 
+            ventas: finanzas.ventas, 
+            recaudado: finanzas.recaudado, 
+            acumulado1: finanzas.acumulado1 
+        });
+    }
+
+    function renderTodo() {
+        renderParticipantes();
+        renderResultados();
+        actualizarResumenFinanzas();
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // --- B. SEGURIDAD Y BLOQUEO ---
+    // ---------------------------------------------------------------------------------------
+
+    function iniciarBloqueo() {
+        let accesoConcedido = false;
+        let intentos = 0;
+
+        const claveGuardada = sessionStorage.getItem('sesionAdminMegaPolla');
+        if (claveGuardada && CLAVES_VALIDAS.includes(claveGuardada)) {
+            accesoConcedido = true;
+        }
+
+        if (!accesoConcedido) {
+            alert("¡Bienvenido al Panel de Administración! Debes ingresar una clave válida para acceder.");
+            while (!accesoConcedido && intentos < 3) {
+                const claveIngresada = prompt("🔒 Acceso Restringido.\nPor favor, ingresa la clave de administrador:");
+                if (claveIngresada && CLAVES_VALIDAS.includes(claveIngresada.trim())) {
+                    accesoConcedido = true;
+                    sessionStorage.setItem('sesionAdminMegaPolla', claveIngresada.trim());
+                } else {
+                    intentos++;
+                    if (intentos < 3) alert("Clave incorrecta.");
+                }
+            }
+        }
+
+        if (!accesoConcedido) {
+            document.body.innerHTML = `
+                <div style="text-align:center; margin-top:100px; font-family:sans-serif;">
+                    <h1>🚫 Acceso Denegado</h1>
+                    <p>No tienes permiso para ver esta página.</p>
+                    <button onclick="location.reload()">Reintentar</button>
+                </div>`;
+        } else {
+            cargarDesdeSupabase();
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // --- C. MANEJO DE RESULTADOS (SORTEOS) ---
+    // ---------------------------------------------------------------------------------------
+
+    window.guardarResultado = async (idInput, nombreSorteo) => {
+        const inputElement = document.getElementById(idInput);
+        const numeroGanador = inputElement.value.trim();
+
+        if (numeroGanador === "") {
+            alert("Por favor, ingresa un número.");
             return;
         }
 
-        // Limpiamos antes de asignar
-        participantes = [];
-        resultados = [];
+        const { error } = await _supabase.from('resultados').upsert(
+            { sorteo: nombreSorteo, numero: numeroGanador },
+            { onConflict: 'sorteo' }
+        );
 
-        data.forEach(item => {
-            if (item.tipo === 'participantes') participantes = item.contenido || [];
-            if (item.tipo === 'resultados') resultados = item.contenido || [];
-            if (item.tipo === 'finanzas') finanzas = item.contenido || finanzas;
+        if (!error) {
+            alert(`✅ ${nombreSorteo} actualizado: ${numeroGanador}`);
+            cargarDesdeSupabase();
+        }
+    };
+
+    function renderResultados() {
+        resultados.forEach(res => {
+            const input = document.querySelector(`input[onchange*="'${res.sorteo}'"]`);
+            if (input) input.value = res.numero;
         });
-        renderTodo();
     }
 
-    async function guardarEnNube(tipo, contenido) {
-        const { error } = await _supabase
-            .from('polla_datos')
-            .upsert({ tipo: tipo, contenido: contenido }, { onConflict: 'tipo' });
-        
-        if (error) console.error("Error al guardar:", error);
-    }
+    // ---------------------------------------------------------------------------------------
+    // --- D. GESTIÓN DE PARTICIPANTES ---
+    // ---------------------------------------------------------------------------------------
 
-    // --- 4. PROCESADOR DE WHATSAPP ---
-    const btnProcesar = document.getElementById('btn-procesar-pegado');
-    if (btnProcesar) {
-        btnProcesar.onclick = () => {
-            const texto = document.getElementById('input-paste-data').value;
-            const lineas = texto.split('\n');
-            let nombre = "", refe = "", jugadas = [];
+    const formParticipante = document.getElementById('form-participante');
+    formParticipante.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            lineas.forEach(l => {
-                const nums = l.match(/\b\d{2}\b/g);
-                if (nums && nums.length >= 7) {
-                    jugadas.push(nums.slice(0, 7).join(','));
-                } else if (l.toLowerCase().includes("refe:") || l.toLowerCase().includes("identificación:")) {
-                    refe = l.match(/\d+/) ? l.match(/\d+/)[0] : "";
-                } else if (l.length > 3 && isNaN(l[0]) && !nombre) {
-                    nombre = l.trim().toUpperCase();
+        const nombre = document.getElementById('nombre-participante').value.trim();
+        const refe = document.getElementById('refe-participante').value.trim();
+        const jugadasRaw = document.getElementById('jugadas-procesadas').value.trim();
+        const notas = document.getElementById('notas-correccion').value || NOTA_SIN_CORRECCION;
+
+        const grupoJugadas = jugadasRaw.split('|').map(j => j.trim()).filter(j => j !== "");
+
+        const { error } = await _supabase.from('participantes').insert([{
+            nro: participantes.length + 1,
+            nombre: nombre,
+            refe: refe,
+            jugadas: grupoJugadas,
+            nota_correccion: notas
+        }]);
+
+        if (!error) {
+            finanzas.ventas += grupoJugadas.length;
+            finanzas.recaudado = finanzas.ventas * 5; 
+            await sincronizarFinanzas();
+            formParticipante.reset();
+            cargarDesdeSupabase();
+        }
+    });
+
+    function renderParticipantes(dataFiltrada = null) {
+        const lista = document.getElementById('lista-participantes');
+        lista.innerHTML = '';
+
+        const dataAMostrar = dataFiltrada || participantes;
+
+        dataAMostrar.forEach((p) => {
+            const li = document.createElement('li');
+            li.style.borderBottom = "1px solid #ccc";
+            li.style.padding = "10px 0";
+
+            const infoDiv = document.createElement('div');
+            infoDiv.innerHTML = `
+                <strong>#${p.nro} - ${p.nombre}</strong> <span style="color:#666;">(Refe: ${p.refe})</span><br>
+                <small style="color:#555;">${p.jugadas.join(' | ')}</small><br>
+                <i style="font-size:0.85em; color:#888;">Nota: ${p.nota_correccion}</i>
+            `;
+            li.appendChild(infoDiv);
+
+            const btnContainer = document.createElement('div');
+            btnContainer.style.marginTop = "5px";
+
+            // BOTÓN EDITAR
+            const btnEditar = document.createElement('button');
+            btnEditar.textContent = "✏️ Editar";
+            btnEditar.className = "btn-editar";
+            btnEditar.onclick = () => habilitarEdicionFila(li, p);
+
+            // BOTÓN ELIMINAR
+            const btnEliminar = document.createElement('button');
+            btnEliminar.textContent = "🗑️ Eliminar";
+            btnEliminar.className = "btn-eliminar";
+            btnEliminar.onclick = async () => {
+                if (confirm(`¿Seguro que deseas eliminar a ${p.nombre}?`)) {
+                    const { error } = await _supabase.from('participantes').delete().eq('id', p.id);
+                    if (!error) {
+                        finanzas.ventas -= p.jugadas.length;
+                        finanzas.recaudado = finanzas.ventas * 5;
+                        await sincronizarFinanzas();
+                        cargarDesdeSupabase();
+                    }
                 }
-            });
-
-            document.getElementById('nombre').value = nombre;
-            document.getElementById('refe').value = refe;
-            document.getElementById('jugadas-procesadas').value = jugadas.join(' | ');
-        };
-    }
-
-    // --- 5. REGISTRO DE PARTICIPANTES ---
-    const formPart = document.getElementById('form-participante');
-    if (formPart) {
-        formPart.onsubmit = async (e) => {
-            e.preventDefault();
-            const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|');
-            
-            jugadasRaw.forEach(grupo => {
-                const numeros = grupo.split(',').map(n => n.trim());
-                if (numeros.length === 7) {
-                    participantes.push({
-                        nombre: document.getElementById('nombre').value.toUpperCase(),
-                        refe: document.getElementById('refe').value,
-                        jugada: numeros
-                    });
-                }
-            });
-
-            await guardarEnNube('participantes', participantes);
-            e.target.reset();
-            document.getElementById('input-paste-data').value = "";
-            cargarDatosDesdeNube();
-        };
-    }
-
-    // --- 6. REGISTRO DE RESULTADOS ---
-    const formRes = document.getElementById('form-resultados');
-    if (formRes) {
-        formRes.onsubmit = async (e) => {
-            e.preventDefault();
-            resultados.push({
-                sorteo: document.getElementById('sorteo-hora').value,
-                numero: document.getElementById('numero-ganador').value.padStart(2, '0')
-            });
-            await guardarEnNube('resultados', resultados);
-            e.target.reset();
-            cargarDatosDesdeNube();
-        };
-    }
-
-    // --- 7. REGISTRO DE FINANZAS ---
-    const formFin = document.getElementById('form-finanzas');
-    if (formFin) {
-        formFin.onsubmit = async (e) => {
-            e.preventDefault();
-            finanzas = {
-                ventas: document.getElementById('input-ventas').value,
-                recaudado: document.getElementById('input-recaudado').value,
-                acumulado: document.getElementById('input-acumulado').value
             };
-            await guardarEnNube('finanzas', finanzas);
-            alert("Finanzas sincronizadas");
+
+            btnContainer.appendChild(btnEditar);
+            btnContainer.appendChild(btnEliminar);
+            li.appendChild(btnContainer);
+            lista.appendChild(li);
+        });
+    }
+
+    function habilitarEdicionFila(li, p) {
+        li.innerHTML = '';
+        const editDiv = document.createElement('div');
+        editDiv.innerHTML = `
+            <input type="text" id="edit-nombre-${p.id}" value="${p.nombre}" class="editable-input">
+            <input type="text" id="edit-refe-${p.id}" value="${p.refe}" class="editable-input">
+            <input type="text" id="edit-jugadas-${p.id}" value="${p.jugadas.join(' | ')}" class="editable-input" style="width:80%">
+        `;
+
+        const btnGuardar = document.createElement('button');
+        btnGuardar.textContent = "💾 Guardar";
+        btnGuardar.className = "btn-guardar";
+        btnGuardar.onclick = async () => {
+            const nuevoNombre = document.getElementById(`edit-nombre-${p.id}`).value.trim();
+            const nuevaRefe = document.getElementById(`edit-refe-${p.id}`).value.trim();
+            const nuevasJugadasRaw = document.getElementById(`edit-jugadas-${p.id}`).value.trim();
+            const nuevasJugadas = nuevasJugadasRaw.split('|').map(j => j.trim());
+
+            // Ajustar finanzas por el cambio
+            finanzas.ventas = (finanzas.ventas - p.jugadas.length) + nuevasJugadas.length;
+            finanzas.recaudado = finanzas.ventas * 5;
+
+            const { error } = await _supabase.from('participantes').update({
+                nombre: nuevoNombre,
+                refe: nuevaRefe,
+                jugadas: nuevasJugadas
+            }).eq('id', p.id);
+
+            if (!error) {
+                await sincronizarFinanzas();
+                cargarDesdeSupabase();
+            }
         };
+
+        const btnCancelar = document.createElement('button');
+        btnCancelar.textContent = "❌ Cancelar";
+        btnCancelar.onclick = () => renderParticipantes();
+
+        editDiv.appendChild(btnGuardar);
+        editDiv.appendChild(btnCancelar);
+        li.appendChild(editDiv);
     }
 
-    // --- 8. RENDERIZADO ---
-    function renderTodo() {
-        const listaP = document.getElementById('lista-participantes');
-        const listaR = document.getElementById('lista-resultados');
+    // ---------------------------------------------------------------------------------------
+    // --- E. BUSCADOR Y RESUMEN ---
+    // ---------------------------------------------------------------------------------------
 
-        if (listaP) {
-            listaP.innerHTML = participantes.map((p, i) => `
-                <li style="display:flex; justify-content:space-between; align-items:center; background:#eee; padding:5px; margin-bottom:5px; border-radius:4px;">
-                    <span><strong>${p.nombre}</strong> (${p.refe}) <br><small>${p.jugada.join('-')}</small></span>
-                    <button onclick="window.eliminarP(${i})" style="color:red;">X</button>
-                </li>`).join('');
-        }
+    const inputBuscar = document.getElementById('input-buscar-participante');
+    inputBuscar.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtrados = participantes.filter(p => 
+            p.nombre.toLowerCase().includes(term) || 
+            p.refe.toLowerCase().includes(term)
+        );
+        renderParticipantes(filtrados);
+    });
 
-        if (listaR) {
-            listaR.innerHTML = resultados.map((r, i) => `
-                <li>${r.sorteo}: ${r.numero} <button onclick="window.eliminarR(${i})">X</button></li>`).join('');
-        }
+    function actualizarResumenFinanzas() {
+        document.getElementById('resumen-ventas').textContent = finanzas.ventas;
+        document.getElementById('resumen-recaudado').textContent = finanzas.recaudado.toFixed(2) + " BS";
     }
 
-    window.eliminarP = async (i) => {
-        participantes.splice(i, 1);
-        await guardarEnNube('participantes', participantes);
-        cargarDatosDesdeNube();
-    };
+    // ---------------------------------------------------------------------------------------
+    // --- F. REINICIO Y BACKUP (DESHACER) ---
+    // ---------------------------------------------------------------------------------------
 
-    window.eliminarR = async (i) => {
-        resultados.splice(i, 1);
-        await guardarEnNube('resultados', resultados);
-        cargarDatosDesdeNube();
-    };
+    const btnReiniciar = document.getElementById('btn-reiniciar-datos');
+    if (btnReiniciar) {
+        btnReiniciar.addEventListener('click', async () => {
+            if (confirm("🚨 ¡ATENCIÓN! ¿Estás seguro de que deseas borrar TODOS los datos?")) {
+                const claveReinicio = prompt("Ingresa la clave maestra para confirmar:");
+                if (claveReinicio && CLAVES_VALIDAS.includes(claveReinicio.trim())) {
+                    
+                    // 1. Crear Backup local antes de borrar (en sessionStorage para el Deshacer)
+                    sessionStorage.setItem('backupParticipantes', JSON.stringify(participantes));
+                    sessionStorage.setItem('backupResultados', JSON.stringify(resultados));
+                    sessionStorage.setItem('backupFinanzas', JSON.stringify(finanzas));
 
-    // Carga inicial
-    await cargarDatosDesdeNube();
+                    // 2. Borrar en Supabase
+                    await _supabase.from('participantes').delete().neq('nro', 0);
+                    await _supabase.from('resultados').delete().neq('id', 0);
+                    
+                    finanzas = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
+                    await sincronizarFinanzas();
+
+                    alert("✅ Datos reiniciados. Puedes usar 'Deshacer' si fue un error.");
+                    document.getElementById('btn-deshacer').style.display = 'inline-block';
+                    cargarDesdeSupabase();
+                } else {
+                    alert("❌ Clave incorrecta.");
+                }
+            }
+        });
+    }
+
+    // Botón Deshacer
+    let btnDeshacer = document.getElementById('btn-deshacer');
+    if (btnDeshacer) {
+        btnDeshacer.addEventListener('click', async () => {
+            const bP = JSON.parse(sessionStorage.getItem('backupParticipantes'));
+            const bR = JSON.parse(sessionStorage.getItem('backupResultados'));
+            const bF = JSON.parse(sessionStorage.getItem('backupFinanzas'));
+
+            if (bP) {
+                // Restaurar participantes (limpiando IDs para evitar conflictos)
+                const pParaSubir = bP.map(({id, ...resto}) => resto);
+                await _supabase.from('participantes').insert(pParaSubir);
+                
+                // Restaurar resultados
+                const rParaSubir = bR.map(({id, ...resto}) => resto);
+                await _supabase.from('resultados').insert(rParaSubir);
+
+                finanzas = bF;
+                await sincronizarFinanzas();
+
+                sessionStorage.removeItem('backupParticipantes');
+                btnDeshacer.style.display = 'none';
+                alert("↩️ Datos restaurados con éxito.");
+                cargarDesdeSupabase();
+            }
+        });
+    }
+
+    // Inicio del sistema
+    iniciarBloqueo();
 });
