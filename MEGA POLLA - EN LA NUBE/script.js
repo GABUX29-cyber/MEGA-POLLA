@@ -16,6 +16,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const JUGADA_SIZE = 7; 
     let rankingCalculado = []; 
 
+    // Función para poner la FECHA ACTUAL (Sin número de edición)
+    function establecerFechaReal() {
+        const headerP = document.querySelector('header p');
+        if (headerP) {
+            const ahora = new Date();
+            // Formato: miércoles, 17 de diciembre de 2025 (o el que prefieras)
+            const opciones = { 
+                weekday: 'long', 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            const fechaFormateada = ahora.toLocaleDateString('es-ES', opciones);
+            
+            // Actualizamos el texto para que solo diga la fecha con un estilo elegante
+            headerP.style.textTransform = 'capitalize';
+            headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fechaFormateada}`;
+        }
+    }
+
     // Función principal para obtener datos de la nube
     async function cargarDatosDesdeNube() {
         try {
@@ -43,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (f) finanzasData = f;
 
-            // Una vez cargados, procesamos la lógica original
+            // Procesamos la lógica
             inicializarSistema();
 
         } catch (error) {
@@ -52,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function inicializarSistema() {
+        establecerFechaReal(); 
         actualizarFinanzasYEstadisticas(); 
         renderResultadosDia();
         renderRanking();
@@ -59,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Funciones Lógicas y de Cálculo (Tu lógica original)
+    // PARTE 2: Funciones Lógicas y de Cálculo
     // ----------------------------------------------------------------
 
     function calcularAciertos(jugadorJugadas, ganadores) {
