@@ -3,134 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - MEGA POLLA</title>
-    <link rel="stylesheet" href="styles.css"> 
+    <title>Panel de Administración - Polla</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .btn-editar, .btn-guardar, .btn-eliminar {
-            margin-left: 10px; padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px;
-        }
-        .btn-editar { background-color: #ffc107; color: #333; }
-        .btn-guardar { background-color: #28a745; color: white; }
-        .btn-eliminar { background-color: #dc3545; color: white; }
-        .editable-input {
-            padding: 5px; margin: 0 2px; width: auto; display: inline-block;
-            background-color: #f0f0f0; border: 1px solid #ccc; color: #333;
-            font-family: 'Montserrat', sans-serif; border-radius: 4px;
-        }
-        #lista-participantes li, #lista-resultados li {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #fff; padding: 10px; margin-bottom: 5px; border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        #paste-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-        #paste-section textarea {
-            width: 100%; min-height: 120px; padding: 10px; margin-bottom: 10px;
-            border: 1px solid #ccc; border-radius: 6px; font-size: 0.95em; box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif; resize: vertical; 
-        }
-        #paste-section button {
-            background-color: #007bff; color: white; padding: 10px 15px; border: none;
-            border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600;
-            width: 100%; transition: background-color 0.2s ease;
-        }
-        #input-buscar-participante {
-            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;
-            font-size: 1em; box-sizing: border-box; margin-bottom: 15px;
-        }
-    </style>
 </head>
-<body>
+<body class="admin-body">
+
     <header>
-        <h1>PANEL DE ADMINISTRACIÓN - MEGA POLLA</h1>
-        <p>Gestión de Resultados y Participantes (Sincronizado en Nube)</p>
+        <h1>PANEL ADMINISTRATIVO</h1>
+        <p>Gestión de Jugadas y Resultados</p>
     </header>
 
-    <div class="admin-section">
-        <h2>💵 Ingresar Montos Financieros y Ventas</h2>
-        <form id="form-finanzas">
-            <label for="input-ventas">Total de VENTAS (Tickets Vendidos):</label>
-            <input type="number" id="input-ventas" min="0" placeholder="0" required>
-            
-            <label for="input-recaudado">Recaudado del Día (Bs.):</label>
-            <input type="number" id="input-recaudado" step="0.01" placeholder="0.00" required>
-            
-            <label for="input-acumulado">Acumulado Primer Lugar (Bs.):</label>
-            <input type="number" id="input-acumulado" step="0.01" placeholder="0.00" required>
-            
-            <button type="submit" style="background-color: #28a745;">💾 Guardar y Sincronizar Finanzas</button>
-        </form>
-    </div>
-
-    <div class="admin-section">
-        <h2>🔢 Ingresar Resultados del Sorteo</h2>
-        <form id="form-resultados">
-            <label for="sorteo-hora">Sorteo y Hora:</label>
-            <select id="sorteo-hora" required>
-                <option value="">Seleccione Sorteo</option>
-                <optgroup label="LOTTO ACTIVO">
-                    <option value="LOTTO ACTIVO 8AM">8 AM</option>
-                    <option value="LOTTO ACTIVO 9AM">9 AM</option>
-                    <option value="LOTTO ACTIVO 10AM">10 AM</option>
-                    <option value="LOTTO ACTIVO 11AM">11 AM</option>
-                    <option value="LOTTO ACTIVO 12PM">12 PM</option>
-                    <option value="LOTTO ACTIVO 1PM">1 PM</option>
-                    <option value="LOTTO ACTIVO 2PM">2 PM</option>
-                    <option value="LOTTO ACTIVO 3PM">3 PM</option>
-                    <option value="LOTTO ACTIVO 4PM">4 PM</option>
-                    <option value="LOTTO ACTIVO 5PM">5 PM</option>
-                    <option value="LOTTO ACTIVO 6PM">6 PM</option>
-                    <option value="LOTTO ACTIVO 7PM">7 PM</option>
-                </optgroup>
-            </select>
-
-            <label for="numero-ganador">Número Ganador (00-99):</label>
-            <input type="number" id="numero-ganador" min="0" max="99" placeholder="00" required>
-            
-            <button type="submit">Guardar Resultado</button>
-        </form>
-        <h3>Resultados Ingresados:</h3>
-        <ul id="lista-resultados">
-            </ul>
-    </div>
-
-    <div class="admin-section">
-        <h2>👥 Ingresar Nuevo Participante</h2>
+    <main class="container">
         
-        <div id="paste-section">
-            <label for="input-paste-data">**Opción Rápida:** Pega el mensaje de WhatsApp aquí:</label>
-            <textarea id="input-paste-data" placeholder="Ej: JUAN PEREZ REFE: 1234 09 19 29 20 25 35 45..."></textarea>
-            <button type="button" id="btn-procesar-pegado">⚡ Procesar Texto Pegado</button>
+        <div class="admin-section">
+            <h2>1. Procesar Datos (WhatsApp)</h2>
+            <p class="instrucciones">Pega el mensaje de la jugada tal cual llega al WhatsApp.</p>
+            <textarea id="input-paste-data" rows="6" placeholder="Ej:
+JUAN PEREZ
+01 12 23 34 45 56 67
+Refe: 5566" style="width:100%; border-radius:8px; padding:12px; border: 1px solid #ccc; font-family: sans-serif;"></textarea>
+            <button id="btn-procesar-pegado" class="btn-admin-accion" style="margin-top:10px; background-color: #28a745;">⚡ Extraer Datos</button>
         </div>
-        
-        <form id="form-participante" style="margin-top: 20px;">
-            <label for="nombre">Nombre / Alias:</label>
-            <input type="text" id="nombre" placeholder="Nombre del jugador" required>
-            
-            <label for="refe">Código REFE (Referencia):</label>
-            <input type="text" id="refe" placeholder="ID o Refe" required>
-            
-            <label for="jugadas-procesadas">Jugadas (Separadas por comas, usar '|' para varias):</label>
-            <input type="text" id="jugadas-procesadas" placeholder="01,02,03,04,05,06,07" required>
-            
-            <input type="hidden" id="notas-correccion" value="Jugada sin correcciones automáticas.">
-            
-            <button type="submit" style="background-color: #fdd835; color: #333;">Registrar Participante</button>
-        </form>
-        
-        <hr>
-        
-        <h3>Listado de Participantes Registrados:</h3>
-        <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por Nombre o REFE...">
-        <ul id="lista-participantes">
-            </ul>
-    </div>
 
-    <div style="text-align: center; margin: 40px 20px;">
-        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white; padding: 15px 30px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer;">
-            ⚠️ REINICIAR TODA LA JORNADA (BORRAR TODO)
-        </button>
-    </div>
+        <div class="admin-section">
+            <h2>2. Registrar Jugada</h2>
+            <form id="form-participante">
+                <div class="form-group">
+                    <label>Nombre del Participante:</label>
+                    <input type="text" id="nombre" placeholder="Nombre completo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Referencia (ID/Pago):</label>
+                    <input type="text" id="refe" placeholder="Número de referencia" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Jugadas Procesadas:</label>
+                    <input type="text" id="jugadas-procesadas" readonly placeholder="Se llenará automáticamente al procesar" style="background-color: #e9ecef;">
+                </div>
+                
+                <button type="submit" class="btn-admin-accion">💾 Guardar en la Nube</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2>3. Cargar Resultados</h2>
+            <form id="form-resultados" class="form-inline">
+                <select id="sorteo-hora" required>
+                    <option value="">Sorteo...</option>
+                    <option value="9:00 AM">9:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="1:00 PM">1:00 PM</option>
+                    <option value="4:00 PM">4:00 PM</option>
+                    <option value="7:00 PM">7:00 PM</option>
+                </select>
+                <input type="number" id="numero-ganador" placeholder="N°" min="0" max="99" required>
+                <button type="submit" class="btn-admin-accion">Cargar</button>
+            </form>
+            <div class="resultados-container">
+                <h3>Sorteos Cargados:</h3>
+                <ul id="lista-resultados"></ul>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>4. Control de Finanzas</h2>
+            <form id="form-finanzas">
+                <div class="form-group">
+                    <label>Ventas Totales (Cant.):</label>
+                    <input type="number" id="input-ventas">
+                </div>
+                <div class="form-group">
+                    <label>Total Recaudado ($):</label>
+                    <input type="number" id="input-recaudado" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Acumulado ($):</label>
+                    <input type="number" id="input-acumulado" step="0.01">
+                </div>
+                <button type="submit" class="btn-admin-accion" style="background-color: #007bff;">Sincronizar Dinero</button>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h2>Participantes en Base de Datos</h2>
+            <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por nombre o referencia..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #ddd;">
+            
+            <div class="scroll-lista">
+                <ul id="lista-participantes"></ul>
+            </div>
+
+            <hr style="margin-top: 30px;">
+            <button id="btn-reiniciar-datos" class="btn-danger" style="background-color: #dc3545; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer;">
+                🚨 REINICIAR TODO EL SISTEMA (BORRAR NUBE)
+            </button>
+        </div>
+
+    </main>
 
     <script src="admin-script.js"></script>
 </body>

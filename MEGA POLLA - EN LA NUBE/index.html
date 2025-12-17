@@ -3,105 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEGA POLLA - Resultados</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Polla de Números - Ranking Público</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <header>
-        <h1>MEGA POLLA</h1>
-        <p>EDICIÓN #324 | FECHA: 06/11/2025</p>
+        <h1>POLLA DE NÚMEROS</h1>
+        <p id="fecha-actual">Cargando fecha...</p>
     </header>
-    
+
+    <div class="card-container">
+        <div class="card estadistica ventas">
+            <h3>JUGADAS</h3>
+            <div id="stat-ventas" class="valor">0</div>
+        </div>
+        <div class="card estadistica acumulado">
+            <h3>ACUMULADO</h3>
+            <div id="stat-acumulado" class="valor">$0</div>
+        </div>
+        <div class="card estadistica recaudado">
+            <h3>RECAUDADO</h3>
+            <div id="stat-recaudado" class="valor">$0</div>
+        </div>
+        <div class="card estadistica ganadores">
+            <h3>GANADORES</h3>
+            <div id="stat-ganadores" class="valor">0</div>
+        </div>
+    </div>
+
     <div class="card-container full-width">
         <div class="card resultados-dia">
-            <h2>Resultados del día</h2>
-            <div id="numeros-ganadores-display" class="numeros-ganadores">
-                <p>Cargando resultados desde la nube...</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-container"> 
-        <div class="card estadistica ventas">
-            <i class="fas fa-ticket-alt"></i>
-            <div class="valor" id="ventas">0</div>
-            <h3>TOTAL JUGADAS REGISTRADAS</h3>
-        </div>
-        
-        <div class="card estadistica recaudado">
-            <i class="fas fa-money-bill-wave"></i>
-            <div class="valor" id="recaudado">0 BS</div>
-            <h3>TOTAL RECAUDADO</h3>
-        </div>
-        
-        <div class="card estadistica casa">
-            <i class="fas fa-chart-line"></i>
-            <div class="valor" id="casa20">0 BS</div>
-            <h3>CASA (20%)</h3>
-        </div>
-
-        <div class="card estadistica domingo">
-            <i class="fas fa-umbrella"></i>
-            <div class="valor" id="cincoDomingo">0 BS</div>
-            <h3>5% DOMINGO</h3> 
-        </div>
-
-        <div class="card estadistica acumulado">
-            <i class="fas fa-trophy"></i>
-            <div class="valor" id="acumulado1">0 BS</div>
-            <h3>ACUMULADO DÍA ANTERIOR</h3> 
-        </div>
-
-        <div class="card estadistica repartir">
-            <i class="fas fa-hand-holding-usd"></i>
-            <div class="valor" id="repartir75">0 BS</div>
-            <h3>PREMIO A REPARTIR (75%)</h3>
-        </div>
-        
-        <div class="card estadistica ganadores" style="grid-column: span 2;">
-            <i class="fas fa-users"></i>
-            <div class="valor" id="total-ganadores">0</div>
-            <h3>Ganadores (7 Aciertos)</h3> 
-        </div>
-    </div>
-
-    <div class="pdf-container">
-        <button id="btn-descargar-pdf">
-            <i class="fas fa-file-pdf"></i> Descargar Resultados en PDF
-        </button>
-    </div>
-
-    <div class="filtro-container">
-        <div class="filtro-input-wrapper">
-            <i class="fas fa-search"></i>
-            <input type="text" id="filtroParticipantes" class="filtro-input" placeholder="🔍 Buscar por Nombre o REFE...">
-        </div>
-    </div>
-
-    <div class="card-container full-width">
-        <div class="card ranking">
-            <h2>PARTICIPANTES Y JUGADAS</h2>
-            <table>
+            <h2>RESULTADOS DEL DÍA</h2>
+            <table class="resultados-grilla" id="tabla-resultados">
                 <thead>
                     <tr>
-                        <th>NRO</th>
-                        <th>PARTICIPANTES</th>
-                        <th>REFE</th>
-                        <th colspan="7">JUGADAS</th> 
-                        <th>ACIERTOS</th>
+                        <th>SORTEO</th>
+                        <th>N°</th>
                     </tr>
                 </thead>
-                <tbody id="ranking-body">
+                <tbody id="cuerpo-resultados">
                     </tbody>
             </table>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="script.js"></script>
+    <div class="filtro-container">
+        <div class="filtro-input-wrapper">
+            <input type="text" id="input-buscar-participante" class="filtro-input" placeholder="🔍 Buscar por nombre o referencia..." onkeyup="filtrarRanking()">
+        </div>
+    </div>
+
+    <div class="card-container full-width">
+        <div class="card ranking">
+            <table id="tabla-ranking">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>PARTICIPANTE</th>
+                        <th>REFE</th>
+                        <th>JUGADA</th>
+                        <th>ACIERTOS</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-ranking">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://ymvpaooxdqhayzcumrpj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function cargarDatosPublicos() {
+            const { data, error } = await _supabase.from('polla_datos').select('*');
+            
+            if (error) {
+                console.error("Error al cargar:", error);
+                return;
+            }
+
+            let participantes = [];
+            let resultados = [];
+            let finanzas = { ventas: 0, acumulado: 0, recaudado: 0 };
+
+            data.forEach(item => {
+                if (item.tipo === 'participantes') participantes = item.contenido;
+                if (item.tipo === 'resultados') resultados = item.contenido;
+                if (item.tipo === 'finanzas') finanzas = item.contenido;
+            });
+
+            // 1. Actualizar Estadísticas
+            document.getElementById('stat-ventas').innerText = participantes.length;
+            document.getElementById('stat-acumulado').innerText = `$${finanzas.acumulado || 0}`;
+            document.getElementById('stat-recaudado').innerText = `$${finanzas.recaudado || 0}`;
+
+            // 2. Renderizar Resultados del Día
+            const cuerpoRes = document.getElementById('cuerpo-resultados');
+            cuerpoRes.innerHTML = resultados.map(r => `
+                <tr>
+                    <td class="sorteo-name">${r.sorteo}</td>
+                    <td class="numero-resultado">${r.numero}</td>
+                </tr>
+            `).join('');
+
+            // 3. Renderizar Ranking (Cálculo de aciertos incluido)
+            const cuerpoRanking = document.getElementById('cuerpo-ranking');
+            const numerosGanadores = resultados.map(r => r.numero);
+
+            cuerpoRanking.innerHTML = participantes.map((p, index) => {
+                let aciertosCount = 0;
+                const jugadaHTML = p.jugada.map(n => {
+                    const esAcierto = numerosGanadores.includes(n);
+                    if (esAcierto) aciertosCount++;
+                    return `<span class="ranking-box ${esAcierto ? 'jugada-acierto' : ''}">${n}</span>`;
+                }).join(' ');
+
+                // Clase de color según aciertos (aciertos-0, aciertos-1, etc.)
+                const claseFila = `aciertos-${aciertosCount}`;
+
+                return `
+                    <tr class="${claseFila}">
+                        <td class="cell-nro"><span class="ranking-box">${index + 1}</span></td>
+                        <td class="cell-participante"><span class="ranking-box">${p.nombre}</span></td>
+                        <td class="cell-refe"><span class="ranking-box">${p.refe}</span></td>
+                        <td class="cell-jugada">${jugadaHTML}</td>
+                        <td class="cell-aciertos">
+                            ${aciertosCount === 7 ? '<span class="ganador-final">GANADOR</span>' : `<div class="aciertos-box">${aciertosCount}</div>`}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Actualizar contador de ganadores de 7
+            const totalGanadores = participantes.filter(p => {
+                let a = 0;
+                p.jugada.forEach(n => { if(numerosGanadores.includes(n)) a++; });
+                return a === 7;
+            }).length;
+            document.getElementById('stat-ganadores').innerText = totalGanadores;
+        }
+
+        function filtrarRanking() {
+            const query = document.getElementById('input-buscar-participante').value.toLowerCase();
+            const filas = document.querySelectorAll('#cuerpo-ranking tr');
+            filas.forEach(fila => {
+                const texto = fila.innerText.toLowerCase();
+                fila.style.display = texto.includes(query) ? '' : 'none';
+            });
+        }
+
+        // Mostrar fecha actual
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('fecha-actual').innerText = new Date().toLocaleDateString('es-ES', opciones);
+
+        // Cargar datos al abrir la página
+        window.onload = cargarDatosPublicos;
+    </script>
 </body>
 </html>

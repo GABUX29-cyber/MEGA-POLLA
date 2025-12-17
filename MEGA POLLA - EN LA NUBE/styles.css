@@ -500,7 +500,7 @@ h2 {
 
 
 /* ========================================================= */
-/* 5. RESPONSIVE DESIGN                                     */
+/* 5. RESPONSIVE DESIGN                                      */
 /* ========================================================= */
 
 @media (max-width: 900px) {
@@ -647,8 +647,7 @@ h2 {
 }
 
 /* ========================================================= */
-/* AJUSTES ADICIONALES PARA EL PANEL DE ADMINISTRACIÓN       */
-/* (Añadidos para compatibilidad con el script JS)           */
+/* 7. ADAPTACIONES PARA SUPABASE (No borrar)                 */
 /* ========================================================= */
 
 #input-buscar-participante {
@@ -666,6 +665,9 @@ h2 {
     border: 1px dashed #007bff !important;
     font-weight: bold;
     color: #007bff;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
 }
 
 .loading-overlay {
@@ -674,4 +676,16 @@ h2 {
     background: rgba(255,255,255,0.8);
     display: flex; justify-content: center; align-items: center;
     z-index: 9999;
+}
+
+/* Estilo para botones de acción en administración */
+.btn-admin-accion {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    width: 100%;
 }
