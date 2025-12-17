@@ -1,30 +1,60 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
     // ----------------------------------------------------------------
-    // PARTE 1: Configuración y Datos
+    // PARTE 1: Carga y Preparación de Datos desde SUPABASE
     // ----------------------------------------------------------------
 
     let resultadosAdmin = [];
     let participantesData = [];
-    let finanzasData = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
+    let finanzasData = {
+        ventas: 0, 
+        recaudado: 0.00,
+        acumulado1: 0.00
+    };
+    
     let resultadosDelDia = [];
     const JUGADA_SIZE = 7; 
+    let rankingCalculado = []; 
 
+    // Función para poner la FECHA ACTUAL (Sin número de edición)
     function establecerFechaReal() {
         const headerP = document.querySelector('header p');
         if (headerP) {
             const ahora = new Date();
-            const opciones = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+            // Formato: miércoles, 17 de diciembre de 2025 (o el que prefieras)
+            const opciones = { 
+                weekday: 'long', 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            const fechaFormateada = ahora.toLocaleDateString('es-ES', opciones);
+            
+            // Actualizamos el texto para que solo diga la fecha con un estilo elegante
             headerP.style.textTransform = 'capitalize';
-            headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${ahora.toLocaleDateString('es-ES', opciones)}`;
+            headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fechaFormateada}`;
         }
     }
 
+    // Función principal para obtener datos de la nube
     async function cargarDatosDesdeNube() {
         try {
-            const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
-            const { data: r } = await _supabase.from('resultados').select('*').order('id', { ascending: true });
-            const { data: f } = await _supabase.from('finanzas').select('*').single();
+            // 1. Obtener Participantes
+            const { data: p, error: ep } = await _supabase
+                .from('participantes')
+                .select('*')
+                .order('nro', { ascending: true });
+            
+            // 2. Obtener Resultados
+            const { data: r, error: er } = await _supabase
+                .from('resultados')
+                .select('*');
+            
+            // 3. Obtener Finanzas
+            const { data: f, error: ef } = await _supabase
+                .from('finanzas')
+                .select('*')
+                .single();
 
             if (p) participantesData = p;
             if (r) {
@@ -33,9 +63,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             if (f) finanzasData = f;
 
+            // Procesamos la lógica
             inicializarSistema();
+
         } catch (error) {
-            console.error("Error cargando nube:", error);
+            console.error("Error cargando datos de Supabase:", error);
         }
     }
 
@@ -48,47 +80,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Lógica de Interfaz
+    // PARTE 2: Funciones Lógicas y de Cálculo
     // ----------------------------------------------------------------
 
+    function calcularAciertos(jugadorJugadas, ganadores) {
+        let aciertos = 0;
+        const ganadoresSet = new Set(ganadores.map(String)); 
+        
+        jugadorJugadas.forEach(num => {
+            if (ganadoresSet.has(String(num).padStart(2, '0')) || ganadoresSet.has(String(num))) {
+                aciertos++;
+            }
+        });
+        return aciertos;
+    }
+
     function actualizarFinanzasYEstadisticas() {
-        document.getElementById('ventas').textContent = finanzasData.ventas;
-        document.getElementById('recaudado').textContent = `${finanzasData.recaudado.toFixed(2)} BS`;
-        document.getElementById('acumulado1').textContent = `${finanzasData.acumulado1.toFixed(2)} BS`;
+        const ventasEl = document.getElementById('ventas');
+        const recaudadoEl = document.getElementById('recaudado');
+        const acumuladoEl = document.getElementById('acumulado1');
         const repartirEl = document.getElementById('repartir75');
+
+        if (ventasEl) ventasEl.textContent = finanzasData.ventas;
+        if (recaudadoEl) recaudadoEl.textContent = `${finanzasData.recaudado.toFixed(2)} BS`;
+        if (acumuladoEl) acumuladoEl.textContent = `${finanzasData.acumulado1.toFixed(2)} BS`;
+        
         if (repartirEl) {
-            repartirEl.textContent = `${(finanzasData.recaudado * 0.75).toFixed(2)} BS`;
+            const premio75 = finanzasData.recaudado * 0.75;
+            repartirEl.textContent = `${premio75.toFixed(2)} BS`;
         }
     }
 
-    // --- RENDERIZADO DE RESULTADOS (FORMATO CUADRO/TABLA SIN CÍRCULOS) ---
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
 
-        container.innerHTML = ''; 
-
-        // Si no hay resultados, mostramos espacios vacíos elegantes
         if (resultadosAdmin.length === 0) {
-            for(let i=1; i<=3; i++) {
-                container.innerHTML += `
-                    <div class="resultado-item-cuadro">
-                        <span class="sorteo-titulo">Sorteo ${i}</span>
-                        <div class="numero-cuadro">--</div>
-                    </div>`;
-            }
+            container.innerHTML = '<p>Esperando resultados del sorteo...</p>';
             return;
         }
 
-        // Renderizamos cada resultado como un cuadro rectangular
+        container.innerHTML = ''; 
         resultadosAdmin.forEach(res => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'resultado-item-cuadro';
-            itemDiv.innerHTML = `
-                <span class="sorteo-titulo">${res.sorteo}</span>
-                <div class="numero-cuadro">${res.numero.toString().padStart(2, '0')}</div>
+            const ball = document.createElement('div');
+            ball.className = 'resultado-item';
+            ball.innerHTML = `
+                <span class="sorteo-name">${res.sorteo}</span>
+                <span class="numero-ball">${res.numero.toString().padStart(2, '0')}</span>
             `;
-            container.appendChild(itemDiv);
+            container.appendChild(ball);
         });
     }
 
@@ -97,23 +137,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        rankingCalculado = participantesData.map(p => {
+            const numAciertos = calcularAciertos(p.jugadas, resultadosDelDia);
+            return { ...p, aciertos: numAciertos };
+        });
+
         const term = filtro.toLowerCase();
+        const dataFiltrada = rankingCalculado.filter(p => 
+            p.nombre.toLowerCase().includes(term) || 
+            p.refe.toString().includes(term)
+        );
+
         let totalGanadores = 0;
 
-        participantesData.forEach(p => {
-            let aciertos = 0;
-            p.jugadas.forEach(num => {
-                if (resultadosDelDia.includes(String(num).padStart(2, '0'))) aciertos++;
-            });
-
-            if (term && !(p.nombre.toLowerCase().includes(term) || p.refe.toString().includes(term))) return;
-            if (aciertos >= 7) totalGanadores++;
+        dataFiltrada.forEach(p => {
+            if (p.aciertos >= 7) totalGanadores++;
 
             const tr = document.createElement('tr');
+            
             let jugadasHTML = '';
             for (let i = 0; i < JUGADA_SIZE; i++) {
                 const num = p.jugadas[i] ? p.jugadas[i].toString().padStart(2, '0') : '--';
-                const claseGanador = resultadosDelDia.includes(num) ? 'hit' : '';
+                const esGanador = resultadosDelDia.includes(num) || resultadosDelDia.includes(p.jugadas[i]);
+                const claseGanador = esGanador ? 'hit' : '';
                 jugadasHTML += `<td><span class="ranking-box ${claseGanador}">${num}</span></td>`;
             }
 
@@ -122,21 +168,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td class="nombre-participante">${p.nombre}</td>
                 <td>${p.refe}</td>
                 ${jugadasHTML}
-                <td>${aciertos >= 7 ? '<span class="ganador-final">GANADOR 🏆</span>' : `<span class="ranking-box aciertos-box">${aciertos}</span>`}</td>
+                <td id="aciertos-${p.nro}"></td>
             `;
+            
             tbody.appendChild(tr);
+
+            const aciertosCell = tr.querySelector(`#aciertos-${p.nro}`);
+            if (p.aciertos >= 7) { 
+                aciertosCell.innerHTML = '<span class="ganador-final">GANADOR 🏆</span>';
+            } else {
+                aciertosCell.innerHTML = `<span class="ranking-box aciertos-box">${p.aciertos}</span>`;
+            }
         });
 
-        document.getElementById('total-ganadores').textContent = totalGanadores;
+        const totalGanadoresEl = document.getElementById('total-ganadores');
+        if (totalGanadoresEl) totalGanadoresEl.textContent = totalGanadores;
     }
 
     function configurarFiltro() {
-        const input = document.getElementById('filtroParticipantes');
-        if (input) input.addEventListener('keyup', (e) => renderRanking(e.target.value.trim()));
+        const filtroInput = document.getElementById('filtroParticipantes');
+        if (filtroInput) {
+            filtroInput.addEventListener('keyup', (e) => {
+                renderRanking(e.target.value.trim()); 
+            });
+        }
     }
 
-    const btnPdf = document.getElementById('btn-descargar-pdf');
-    if (btnPdf) btnPdf.addEventListener('click', () => window.print());
+    // ----------------------------------------------------------------
+    // LÓGICA PARA DESCARGAR PDF
+    // ----------------------------------------------------------------
+    
+    const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
+    if (btnDescargarPdf) {
+        btnDescargarPdf.addEventListener('click', () => {
+            const originalTitle = document.title;
+            document.title = "Resultados_Mega_Polla";
+            window.print();
+            document.title = originalTitle;
+        });
+    }
 
+    // INICIO DE CARGA
     cargarDatosDesdeNube();
 });
