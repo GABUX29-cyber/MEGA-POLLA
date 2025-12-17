@@ -5,35 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - MEGA POLLA</title>
     <link rel="stylesheet" href="styles.css"> 
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-        .btn-editar, .btn-guardar, .btn-eliminar { margin-left: 10px; padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px; }
+        .btn-editar, .btn-guardar, .btn-eliminar {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-editar { background-color: #ffc107; color: #333; }
+        .btn-guardar { background-color: #28a745; color: white; }
         .btn-eliminar { background-color: #dc3545; color: white; }
+        .editable-input {
+            padding: 5px; margin: 0 2px; width: auto; display: inline-block;
+            background-color: #f0f0f0; border: 1px solid #ccc; color: #333;
+            font-family: 'Montserrat', sans-serif; border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <header><h1>PANEL DE CONTROL</h1></header>
+
+    <header>
+        <h1>PANEL DE CONTROL</h1>
+        <p>Administración de Sorteos y Participantes</p>
+    </header>
+
     <div class="admin-container card">
         <h3>Cargar Resultado Ganador:</h3>
         <form id="form-resultados">
-            <input type="text" id="sorteo-nombre" placeholder="Sorteo" required>
-            <input type="text" id="numero-ganador" placeholder="Número" required>
+            <input type="text" id="sorteo-nombre" placeholder="Nombre del Sorteo (Ej: GRANJITA 10AM)" required>
+            <input type="text" id="numero-ganador" placeholder="Número Ganador (Ej: 25)" required>
             <button type="submit">Publicar Resultado</button>
         </form>
-        <ul id="lista-resultados-admin"></ul>
+        <div id="resultados-dia-admin">
+            <h4>Resultados publicados hoy:</h4>
+            <ul id="lista-resultados-admin"></ul>
+        </div>
     </div>
+
     <div class="admin-container card">
-        <h3>Registrar Participante:</h3>
+        <h3>Registrar Nuevo Participante:</h3>
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">
+            Separa los números con comas. Puedes registrar varias jugadas a la vez usando una barra vertical (|).
+        </p>
         <form id="form-participante">
-            <input type="number" id="correlativo" placeholder="Nro" required>
-            <input type="text" id="nombre-participante" placeholder="Nombre" required>
-            <input type="text" id="referencia" placeholder="REFE" required>
-            <input type="text" id="jugadas-procesadas" placeholder="01,02,03,04,05,06,07" required>
-            <button type="submit">Registrar</button>
+            <input type="number" id="correlativo" placeholder="Nro Correlativo (Ej: 101)" required>
+            <input type="text" id="nombre-participante" placeholder="Nombre del Participante" required>
+            <input type="text" id="referencia" placeholder="REFE / Teléfono / Vendedor" required>
+            <input type="text" id="jugadas-procesadas" placeholder="Ej: 09,19,29,20,25,35,45 | 08,18,28,29,30,40,50" required>
+            <input type="hidden" id="notas-correccion" value=""> 
+            <button type="submit">Registrar Participante</button>
         </form>
+        <h3>Participantes Actuales:</h3>
+        <div id="participantes-search-bar">
+            <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por Nombre o REFE...">
+        </div>
         <ul id="lista-participantes"></ul>
     </div>
-    <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white;">🔴 Reiniciar Todo</button>
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white;">🔴 Reiniciar Partidas y Resultados</button>
+    </div>
+
     <script src="admin-script.js"></script>
 </body>
 </html>
