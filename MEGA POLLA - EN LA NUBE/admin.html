@@ -7,36 +7,131 @@
     <link rel="stylesheet" href="styles.css"> 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .btn-eliminar { background-color: #dc3545; color: white; border: none; padding: 5px; cursor: pointer; border-radius: 4px; margin-left: 10px;}
+        .btn-editar, .btn-guardar, .btn-eliminar {
+            margin-left: 10px; padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px;
+        }
+        .btn-editar { background-color: #ffc107; color: #333; }
+        .btn-guardar { background-color: #28a745; color: white; }
+        .btn-eliminar { background-color: #dc3545; color: white; }
+        .editable-input {
+            padding: 5px; margin: 0 2px; width: auto; display: inline-block;
+            background-color: #f0f0f0; border: 1px solid #ccc; color: #333;
+            font-family: 'Montserrat', sans-serif; border-radius: 4px;
+        }
+        #lista-participantes li, #lista-resultados li {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; padding: 10px; margin-bottom: 5px; border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        #paste-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        #paste-section textarea {
+            width: 100%; min-height: 120px; padding: 10px; margin-bottom: 10px;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 0.95em; box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif; resize: vertical; 
+        }
+        #paste-section button {
+            background-color: #007bff; color: white; padding: 10px 15px; border: none;
+            border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600;
+            width: 100%; transition: background-color 0.2s ease;
+        }
+        #input-buscar-participante {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 1em; box-sizing: border-box; margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>PANEL DE CONTROL</h1>
-        <p>Administración de Sorteos y Participantes</p>
+        <h1>PANEL DE ADMINISTRACIÓN - MEGA POLLA</h1>
+        <p>Gestión de Resultados y Participantes (Sincronizado en Nube)</p>
     </header>
 
-    <div class="admin-container card">
-        <h3>Cargar Resultado:</h3>
-        <form id="form-resultados">
-            <input type="text" id="sorteo-nombre" placeholder="Sorteo (Ej: Granjita 10AM)" required>
-            <input type="text" id="numero-ganador" placeholder="Número (Ej: 25)" required>
-            <button type="submit">Publicar</button>
+    <div class="admin-section">
+        <h2>💵 Ingresar Montos Financieros y Ventas</h2>
+        <form id="form-finanzas">
+            <label for="input-ventas">Total de VENTAS (Tickets Vendidos):</label>
+            <input type="number" id="input-ventas" min="0" placeholder="0" required>
+            
+            <label for="input-recaudado">Recaudado del Día (Bs.):</label>
+            <input type="number" id="input-recaudado" step="0.01" placeholder="0.00" required>
+            
+            <label for="input-acumulado">Acumulado Primer Lugar (Bs.):</label>
+            <input type="number" id="input-acumulado" step="0.01" placeholder="0.00" required>
+            
+            <button type="submit" style="background-color: #28a745;">💾 Guardar y Sincronizar Finanzas</button>
         </form>
-        <ul id="lista-resultados-admin"></ul>
     </div>
 
-    <div class="admin-container card">
-        <h3>Registrar Participante (Pega aquí con |):</h3>
-        <form id="form-participante">
-            <input type="number" id="correlativo" placeholder="Nro Correlativo" required>
-            <input type="text" id="nombre-participante" placeholder="Nombre" required>
-            <input type="text" id="referencia" placeholder="Referencia" required>
-            <input type="text" id="jugadas-procesadas" placeholder="01,02,03... | 10,11,12..." required>
-            <button type="submit">Registrar</button>
+    <div class="admin-section">
+        <h2>🔢 Ingresar Resultados del Sorteo</h2>
+        <form id="form-resultados">
+            <label for="sorteo-hora">Sorteo y Hora:</label>
+            <select id="sorteo-hora" required>
+                <option value="">Seleccione Sorteo</option>
+                <optgroup label="LOTTO ACTIVO">
+                    <option value="LOTTO ACTIVO 8AM">8 AM</option>
+                    <option value="LOTTO ACTIVO 9AM">9 AM</option>
+                    <option value="LOTTO ACTIVO 10AM">10 AM</option>
+                    <option value="LOTTO ACTIVO 11AM">11 AM</option>
+                    <option value="LOTTO ACTIVO 12PM">12 PM</option>
+                    <option value="LOTTO ACTIVO 1PM">1 PM</option>
+                    <option value="LOTTO ACTIVO 2PM">2 PM</option>
+                    <option value="LOTTO ACTIVO 3PM">3 PM</option>
+                    <option value="LOTTO ACTIVO 4PM">4 PM</option>
+                    <option value="LOTTO ACTIVO 5PM">5 PM</option>
+                    <option value="LOTTO ACTIVO 6PM">6 PM</option>
+                    <option value="LOTTO ACTIVO 7PM">7 PM</option>
+                </optgroup>
+            </select>
+
+            <label for="numero-ganador">Número Ganador (00-99):</label>
+            <input type="number" id="numero-ganador" min="0" max="99" placeholder="00" required>
+            
+            <button type="submit">Guardar Resultado</button>
         </form>
-        <ul id="lista-participantes"></ul>
+        <h3>Resultados Ingresados:</h3>
+        <ul id="lista-resultados">
+            </ul>
     </div>
+
+    <div class="admin-section">
+        <h2>👥 Ingresar Nuevo Participante</h2>
+        
+        <div id="paste-section">
+            <label for="input-paste-data">**Opción Rápida:** Pega el mensaje de WhatsApp aquí:</label>
+            <textarea id="input-paste-data" placeholder="Ej: JUAN PEREZ REFE: 1234 09 19 29 20 25 35 45..."></textarea>
+            <button type="button" id="btn-procesar-pegado">⚡ Procesar Texto Pegado</button>
+        </div>
+        
+        <form id="form-participante" style="margin-top: 20px;">
+            <label for="nombre">Nombre / Alias:</label>
+            <input type="text" id="nombre" placeholder="Nombre del jugador" required>
+            
+            <label for="refe">Código REFE (Referencia):</label>
+            <input type="text" id="refe" placeholder="ID o Refe" required>
+            
+            <label for="jugadas-procesadas">Jugadas (Separadas por comas, usar '|' para varias):</label>
+            <input type="text" id="jugadas-procesadas" placeholder="01,02,03,04,05,06,07" required>
+            
+            <input type="hidden" id="notas-correccion" value="Jugada sin correcciones automáticas.">
+            
+            <button type="submit" style="background-color: #fdd835; color: #333;">Registrar Participante</button>
+        </form>
+        
+        <hr>
+        
+        <h3>Listado de Participantes Registrados:</h3>
+        <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por Nombre o REFE...">
+        <ul id="lista-participantes">
+            </ul>
+    </div>
+
+    <div style="text-align: center; margin: 40px 20px;">
+        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white; padding: 15px 30px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer;">
+            ⚠️ REINICIAR TODA LA JORNADA (BORRAR TODO)
+        </button>
+    </div>
+
     <script src="admin-script.js"></script>
 </body>
 </html>

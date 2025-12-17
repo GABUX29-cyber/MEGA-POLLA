@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
     <header>
         <h1>MEGA POLLA</h1>
         <p>EDICIÓN #324 | FECHA: 06/11/2025</p>
@@ -19,7 +19,7 @@
         <div class="card resultados-dia">
             <h2>Resultados del día</h2>
             <div id="numeros-ganadores-display" class="numeros-ganadores">
-                <p>No se han seleccionado números ganadores</p>
+                <p>Cargando resultados desde la nube...</p>
             </div>
         </div>
     </div>
@@ -27,24 +27,40 @@
     <div class="card-container"> 
         <div class="card estadistica ventas">
             <i class="fas fa-ticket-alt"></i>
-            <div class="valor" id="ventas-total">0</div>
-            <h3>JUGADAS</h3>
+            <div class="valor" id="ventas">0</div>
+            <h3>TOTAL JUGADAS REGISTRADAS</h3>
         </div>
+        
         <div class="card estadistica recaudado">
             <i class="fas fa-money-bill-wave"></i>
-            <div class="valor" id="recaudado-total">0 BS</div>
-            <h3>RECAUDADO</h3>
+            <div class="valor" id="recaudado">0 BS</div>
+            <h3>TOTAL RECAUDADO</h3>
         </div>
+        
+        <div class="card estadistica casa">
+            <i class="fas fa-chart-line"></i>
+            <div class="valor" id="casa20">0 BS</div>
+            <h3>CASA (20%)</h3>
+        </div>
+
+        <div class="card estadistica domingo">
+            <i class="fas fa-umbrella"></i>
+            <div class="valor" id="cincoDomingo">0 BS</div>
+            <h3>5% DOMINGO</h3> 
+        </div>
+
         <div class="card estadistica acumulado">
-            <i class="fas fa-coins"></i>
-            <div class="valor" id="acumulado-total">0 BS</div>
-            <h3>ACUMULADO</h3>
+            <i class="fas fa-trophy"></i>
+            <div class="valor" id="acumulado1">0 BS</div>
+            <h3>ACUMULADO DÍA ANTERIOR</h3> 
         </div>
+
         <div class="card estadistica repartir">
             <i class="fas fa-hand-holding-usd"></i>
             <div class="valor" id="repartir75">0 BS</div>
             <h3>PREMIO A REPARTIR (75%)</h3>
         </div>
+        
         <div class="card estadistica ganadores" style="grid-column: span 2;">
             <i class="fas fa-users"></i>
             <div class="valor" id="total-ganadores">0</div>
@@ -78,10 +94,14 @@
                         <th>ACIERTOS</th>
                     </tr>
                 </thead>
-                <tbody id="ranking-body"></tbody>
+                <tbody id="ranking-body">
+                    </tbody>
             </table>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
