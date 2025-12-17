@@ -1,109 +1,187 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - Polla</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="admin-body">
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. CONFIGURACIÓN SUPABASE
+    const SUPABASE_URL = 'https://ymvpaooxdqhayzcumrpj.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <header>
-        <h1>PANEL ADMINISTRATIVO</h1>
-        <p>Gestión de Jugadas y Resultados</p>
-    </header>
+    const CLAVES_VALIDAS = ['29931335', '24175402'];
+    let participantes = [];
+    let resultados = [];
+    let finanzas = { ventas: 0, recaudado: 0.00, acumulado: 0.00 };
 
-    <main class="container">
+    // 2. BLOQUEO DE ACCESO
+    const clave = prompt("🔐 Acceso Administrativo - MEGA POLLA\nIngrese su clave:");
+    if (!CLAVES_VALIDAS.includes(clave)) {
+        alert("Acceso denegado.");
+        window.location.href = "index.html";
+    }
+
+    // 3. CARGA DE DATOS (TABLA ÚNICA polla_datos)
+    async function cargarDatos() {
+        const { data, error } = await _supabase.from('polla_datos').select('*');
+        if (error) return console.error("Error al cargar:", error);
+
+        data.forEach(item => {
+            if (item.tipo === 'participantes') participantes = item.contenido || [];
+            if (item.tipo === 'resultados') resultados = item.contenido || [];
+            if (item.tipo === 'finanzas') finanzas = item.contenido || finanzas;
+        });
+        renderTodo();
+    }
+
+    async function guardarEnNube(tipo, contenido) {
+        await _supabase.from('polla_datos').upsert({ tipo, contenido }, { onConflict: 'tipo' });
+    }
+
+    // 4. PROCESADOR DE WHATSAPP (Pegado Rápido)
+    document.getElementById('btn-procesar-pegado').onclick = () => {
+        const rawText = document.getElementById('input-paste-data').value;
+        const lineas = rawText.split('\n').map(l => l.trim());
         
-        <div class="admin-section">
-            <h2>1. Procesar Datos (WhatsApp)</h2>
-            <p class="instrucciones">Pega el mensaje de la jugada tal cual llega al WhatsApp.</p>
-            <textarea id="input-paste-data" rows="6" placeholder="Ej:
-JUAN PEREZ
-01 12 23 34 45 56 67
-Refe: 5566" style="width:100%; border-radius:8px; padding:12px; border: 1px solid #ccc; font-family: sans-serif;"></textarea>
-            <button id="btn-procesar-pegado" class="btn-admin-accion" style="margin-top:10px; background-color: #28a745;">⚡ Extraer Datos</button>
-        </div>
+        let nombreDetectado = "";
+        let refeDetectado = "";
+        let jugadasEncontradas = [];
 
-        <div class="admin-section">
-            <h2>2. Registrar Jugada</h2>
-            <form id="form-participante">
-                <div class="form-group">
-                    <label>Nombre del Participante:</label>
-                    <input type="text" id="nombre" placeholder="Nombre completo" required>
+        lineas.forEach(linea => {
+            // Buscar grupos de 7 números
+            const nums = linea.match(/\b\d{2}\b/g);
+            if (nums && nums.length >= 7) {
+                // Si hay más de 7, los separa en grupos
+                for (let i = 0; i <= nums.length - 7; i += 7) {
+                    jugadasEncontradas.push(nums.slice(i, i + 7).join(','));
+                }
+            } else if (linea.toLowerCase().includes("identificación:") || linea.toLowerCase().includes("refe:")) {
+                const idMatch = linea.match(/\d+/);
+                if (idMatch) refeDetectado = idMatch[0];
+            } else if (linea.length > 3 && isNaN(linea[0]) && !nombreDetectado) {
+                nombreDetectado = linea.toUpperCase();
+            }
+        });
+
+        document.getElementById('nombre').value = nombreDetectado;
+        document.getElementById('refe').value = refeDetectado;
+        document.getElementById('jugadas-procesadas').value = jugadasEncontradas.join(' | ');
+        alert("✅ Datos procesados. Revise los campos antes de registrar.");
+    };
+
+    // 5. REGISTRO DE PARTICIPANTES
+    document.getElementById('form-participante').onsubmit = async (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById('nombre').value.trim();
+        const refe = document.getElementById('refe').value.trim();
+        const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|');
+
+        jugadasRaw.forEach(grupo => {
+            const numeros = grupo.split(',').map(n => n.trim());
+            if (numeros.length === 7) {
+                participantes.push({
+                    nombre: nombre.toUpperCase(),
+                    refe: refe,
+                    jugada: numeros
+                });
+            }
+        });
+
+        await guardarEnNube('participantes', participantes);
+        document.getElementById('input-paste-data').value = "";
+        e.target.reset();
+        cargarDatos();
+    };
+
+    // 6. RESULTADOS DEL SORTEO
+    document.getElementById('form-resultados').onsubmit = async (e) => {
+        e.preventDefault();
+        const sorteo = document.getElementById('sorteo-hora').value;
+        const numero = document.getElementById('numero-ganador').value.padStart(2, '0');
+
+        resultados.push({ sorteo, numero });
+        await guardarEnNube('resultados', resultados);
+        e.target.reset();
+        cargarDatos();
+    };
+
+    // 7. GESTIÓN DE FINANZAS
+    document.getElementById('form-finanzas').onsubmit = async (e) => {
+        e.preventDefault();
+        finanzas = {
+            ventas: document.getElementById('input-ventas').value,
+            recaudado: document.getElementById('input-recaudado').value,
+            acumulado: document.getElementById('input-acumulado').value
+        };
+        await guardarEnNube('finanzas', finanzas);
+        alert("💰 Finanzas actualizadas correctamente.");
+    };
+
+    // 8. RENDERIZADO Y BUSCADOR
+    function renderTodo() {
+        // Render Resultados
+        const listaR = document.getElementById('lista-resultados');
+        listaR.innerHTML = resultados.map((r, i) => `
+            <li>
+                <span><strong>${r.sorteo}:</strong> ${r.numero}</span>
+                <button class="btn-eliminar" onclick="eliminarR(${i})">Eliminar</button>
+            </li>
+        `).join('');
+
+        // Render Participantes con buscador
+        renderParticipantes();
+
+        // Cargar montos en inputs
+        document.getElementById('input-ventas').value = finanzas.ventas;
+        document.getElementById('input-recaudado').value = finanzas.recaudado;
+        document.getElementById('input-acumulado').value = finanzas.acumulado;
+    }
+
+    function renderParticipantes() {
+        const query = document.getElementById('input-buscar-participante').value.toLowerCase();
+        const listaP = document.getElementById('lista-participantes');
+        
+        const filtrados = participantes.filter(p => 
+            p.nombre.toLowerCase().includes(query) || p.refe.includes(query)
+        );
+
+        listaP.innerHTML = filtrados.map((p, i) => `
+            <li>
+                <div>
+                    <strong>${p.nombre}</strong> (Ref: ${p.refe})<br>
+                    <small>${p.jugada.join(' - ')}</small>
                 </div>
-                
-                <div class="form-group">
-                    <label>Referencia (ID/Pago):</label>
-                    <input type="text" id="refe" placeholder="Número de referencia" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Jugadas Procesadas:</label>
-                    <input type="text" id="jugadas-procesadas" readonly placeholder="Se llenará automáticamente al procesar" style="background-color: #e9ecef;">
-                </div>
-                
-                <button type="submit" class="btn-admin-accion">💾 Guardar en la Nube</button>
-            </form>
-        </div>
+                <button class="btn-eliminar" onclick="eliminarP(${i})">Eliminar</button>
+            </li>
+        `).join('');
+    }
 
-        <div class="admin-section">
-            <h2>3. Cargar Resultados</h2>
-            <form id="form-resultados" class="form-inline">
-                <select id="sorteo-hora" required>
-                    <option value="">Sorteo...</option>
-                    <option value="9:00 AM">9:00 AM</option>
-                    <option value="11:00 AM">11:00 AM</option>
-                    <option value="1:00 PM">1:00 PM</option>
-                    <option value="4:00 PM">4:00 PM</option>
-                    <option value="7:00 PM">7:00 PM</option>
-                </select>
-                <input type="number" id="numero-ganador" placeholder="N°" min="0" max="99" required>
-                <button type="submit" class="btn-admin-accion">Cargar</button>
-            </form>
-            <div class="resultados-container">
-                <h3>Sorteos Cargados:</h3>
-                <ul id="lista-resultados"></ul>
-            </div>
-        </div>
+    // Funciones globales para botones
+    window.eliminarP = async (i) => {
+        if(confirm("¿Eliminar esta jugada?")) {
+            participantes.splice(i, 1);
+            await guardarEnNube('participantes', participantes);
+            cargarDatos();
+        }
+    };
 
-        <div class="admin-section">
-            <h2>4. Control de Finanzas</h2>
-            <form id="form-finanzas">
-                <div class="form-group">
-                    <label>Ventas Totales (Cant.):</label>
-                    <input type="number" id="input-ventas">
-                </div>
-                <div class="form-group">
-                    <label>Total Recaudado ($):</label>
-                    <input type="number" id="input-recaudado" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>Acumulado ($):</label>
-                    <input type="number" id="input-acumulado" step="0.01">
-                </div>
-                <button type="submit" class="btn-admin-accion" style="background-color: #007bff;">Sincronizar Dinero</button>
-            </form>
-        </div>
+    window.eliminarR = async (i) => {
+        if(confirm("¿Eliminar este resultado?")) {
+            resultados.splice(i, 1);
+            await guardarEnNube('resultados', resultados);
+            cargarDatos();
+        }
+    };
 
-        <div class="admin-section">
-            <h2>Participantes en Base de Datos</h2>
-            <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por nombre o referencia..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #ddd;">
-            
-            <div class="scroll-lista">
-                <ul id="lista-participantes"></ul>
-            </div>
+    // Reiniciar Sistema
+    document.getElementById('btn-reiniciar-datos').onclick = async () => {
+        if (confirm("⚠️ ¿ESTÁS SEGURO? Se borrarán TODOS los datos.")) {
+            const pass = prompt("Confirma con tu clave:");
+            if (CLAVES_VALIDAS.includes(pass)) {
+                await guardarEnNube('participantes', []);
+                await guardarEnNube('resultados', []);
+                await guardarEnNube('finanzas', { ventas: 0, recaudado: 0, acumulado: 0 });
+                location.reload();
+            }
+        }
+    };
 
-            <hr style="margin-top: 30px;">
-            <button id="btn-reiniciar-datos" class="btn-danger" style="background-color: #dc3545; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer;">
-                🚨 REINICIAR TODO EL SISTEMA (BORRAR NUBE)
-            </button>
-        </div>
+    document.getElementById('input-buscar-participante').oninput = renderParticipantes;
 
-    </main>
-
-    <script src="admin-script.js"></script>
-</body>
-</html>
+    cargarDatos();
+});
