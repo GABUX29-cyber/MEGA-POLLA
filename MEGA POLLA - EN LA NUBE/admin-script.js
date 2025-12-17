@@ -1,121 +1,283 @@
 document.addEventListener('DOMContentLoaded', async () => {
+
+    // ---------------------------------------------------------------------------------------
+    // --- CONFIGURACIÓN SUPABASE ---
+    // ---------------------------------------------------------------------------------------
     const SUPABASE_URL = 'https://ymvpaooxdqhayzcumrpj.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_TdMi6H9GkduboyrDAf0L3g_Ct5C7Wqy';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ---------------------------------------------------------------------------------------
+    // --- CONSTANTES DE CONFIGURACIÓN ---
+    // ---------------------------------------------------------------------------------------
     const CLAVES_VALIDAS = ['29931335', '24175402'];
+    const NOTA_SIN_CORRECCION = "Jugada sin correcciones automáticas.";
+    const JUGADA_SIZE = 7;
+
+    // Variables de estado local
     let participantes = [];
     let resultados = [];
     let finanzas = { ventas: 0, recaudado: 0.00, acumulado: 0.00 };
 
+    // ---------------------------------------------------------------------------------------
     // --- BLOQUEO DE ACCESO ---
-    const claveAcceso = prompt("🔒 Acceso Administrativo\nIngrese su clave:");
-    if (!CLAVES_VALIDAS.includes(claveAcceso)) {
-        alert("Acceso denegado");
-        window.location.href = "index.html";
+    // ---------------------------------------------------------------------------------------
+    function iniciarBloqueo() {
+        let accesoConcedido = false;
+        let intentos = 0;
+        while (!accesoConcedido && intentos < 3) {
+            const claveIngresada = prompt("🔒 Acceso Restringido.\nPor favor, ingresa la clave de administrador:");
+            if (claveIngresada && CLAVES_VALIDAS.includes(claveIngresada.trim())) {
+                accesoConcedido = true;
+            } else {
+                intentos++;
+                if (intentos < 3) alert("Clave incorrecta.");
+                else window.location.href = "index.html";
+            }
+        }
+    }
+    iniciarBloqueo();
+
+    // ---------------------------------------------------------------------------------------
+    // --- CARGA Y PERSISTENCIA (Tabla Única: polla_datos) ---
+    // ---------------------------------------------------------------------------------------
+    
+    async function cargarDatosDesdeSupabase() {
+        try {
+            const { data, error } = await _supabase.from('polla_datos').select('*');
+            if (error) throw error;
+
+            data.forEach(item => {
+                if (item.tipo === 'participantes') participantes = item.contenido || [];
+                if (item.tipo === 'resultados') resultados = item.contenido || [];
+                if (item.tipo === 'finanzas') finanzas = item.contenido || { ventas: 0, recaudado: 0, acumulado: 0 };
+            });
+
+            renderTodo();
+        } catch (err) {
+            console.error("Error cargando datos:", err);
+        }
     }
 
-    // --- FUNCIONES DE NUBE (TABLA ÚNICA) ---
-    async function cargarTodo() {
-        const { data, error } = await _supabase.from('polla_datos').select('*');
-        if (error) return console.error("Error al cargar:", error);
+    async function actualizarEnNube(tipo, contenido) {
+        try {
+            const { error } = await _supabase
+                .from('polla_datos')
+                .upsert({ tipo: tipo, contenido: contenido }, { onConflict: 'tipo' });
+            if (error) throw error;
+        } catch (err) {
+            alert("Error al guardar en la nube: " + err.message);
+        }
+    }
 
-        data.forEach(item => {
-            if (item.tipo === 'participantes') participantes = item.contenido || [];
-            if (item.tipo === 'resultados') resultados = item.contenido || [];
-            if (item.tipo === 'finanzas') finanzas = item.contenido || finanzas;
+    function renderTodo() {
+        renderResultados();
+        renderParticipantes();
+        cargarFinanzasInputs();
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // --- GESTIÓN DE FINANZAS ---
+    // ---------------------------------------------------------------------------------------
+    const formFinanzas = document.getElementById('form-finanzas');
+    function cargarFinanzasInputs() {
+        if (formFinanzas) {
+            document.getElementById('input-ventas').value = finanzas.ventas || 0;
+            document.getElementById('input-recaudado').value = finanzas.recaudado || 0;
+            document.getElementById('input-acumulado').value = finanzas.acumulado || 0;
+        }
+    }
+
+    if (formFinanzas) {
+        formFinanzas.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            finanzas.ventas = parseInt(document.getElementById('input-ventas').value);
+            finanzas.recaudado = parseFloat(document.getElementById('input-recaudado').value);
+            finanzas.acumulado = parseFloat(document.getElementById('input-acumulado').value);
+            
+            await actualizarEnNube('finanzas', finanzas);
+            alert("✅ Finanzas sincronizadas en la nube.");
+            renderTodo();
         });
-        renderizar();
     }
 
-    async function actualizarNube(tipo, contenido) {
-        await _supabase.from('polla_datos').upsert({ tipo, contenido }, { onConflict: 'tipo' });
-    }
+    // ---------------------------------------------------------------------------------------
+    // --- GESTIÓN DE RESULTADOS ---
+    // ---------------------------------------------------------------------------------------
+    const formResultados = document.getElementById('form-resultados');
+    const listaResultados = document.getElementById('lista-resultados');
 
-    // --- PROCESADOR WHATSAPP ---
-    document.getElementById('btn-procesar-pegado').onclick = () => {
-        const texto = document.getElementById('input-paste-data').value;
-        const lineas = texto.split('\n');
-        let nombre = "", refe = "", jugadasDetectadas = [];
-
-        lineas.forEach(linea => {
-            const numeros = linea.match(/\b\d{2}\b/g);
-            if (numeros && numeros.length >= 7) {
-                jugadasDetectadas.push(numeros.slice(0, 7).join(','));
-            } else if (linea.toLowerCase().includes("refe:")) {
-                refe = linea.match(/\d+/) ? linea.match(/\d+/)[0] : "";
-            } else if (linea.length > 3 && isNaN(linea[0])) {
-                nombre = linea.trim().toUpperCase();
+    if (formResultados) {
+        formResultados.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sorteo = document.getElementById('sorteo-hora').value;
+            const numero = document.getElementById('numero-ganador').value.padStart(2, '0');
+            
+            if (sorteo && numero) {
+                resultados.push({ sorteo, numero });
+                await actualizarEnNube('resultados', resultados);
+                renderTodo();
+                formResultados.reset();
             }
         });
+    }
 
-        document.getElementById('nombre').value = nombre;
-        document.getElementById('refe').value = refe;
-        document.getElementById('jugadas-procesadas').value = jugadasDetectadas.join(' | ');
+    function renderResultados() {
+        if (!listaResultados) return;
+        listaResultados.innerHTML = '';
+        resultados.forEach((res, index) => {
+            const li = document.createElement('li');
+            li.className = "li-admin-item"; 
+            li.innerHTML = `
+                <span><strong>${res.sorteo}:</strong> ${res.numero}</span>
+                <button class="btn-eliminar" onclick="eliminarResultado(${index})">Eliminar</button>
+            `;
+            listaResultados.appendChild(li);
+        });
+    }
+
+    window.eliminarResultado = async (index) => {
+        if (confirm("¿Eliminar este resultado?")) {
+            resultados.splice(index, 1);
+            await actualizarEnNube('resultados', resultados);
+            renderTodo();
+        }
     };
 
-    // --- REGISTRO DE JUGADA ---
-    document.getElementById('form-participante').onsubmit = async (e) => {
-        e.preventDefault();
-        const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|');
+    // ---------------------------------------------------------------------------------------
+    // --- PROCESAMIENTO RÁPIDO (WhatsApp) ---
+    // ---------------------------------------------------------------------------------------
+    const btnProcesarPegado = document.getElementById('btn-procesar-pegado');
+    const inputPasteData = document.getElementById('input-paste-data');
+
+    if (btnProcesarPegado) {
+        btnProcesarPegado.addEventListener('click', () => {
+            const rawData = inputPasteData.value;
+            if (!rawData.trim()) return alert("Pega datos primero.");
+            
+            const lines = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
+            let nombreExtraido = ""; 
+            let refeExtraido = ""; 
+            let todasLasJugadas = [];
+
+            lines.forEach(line => {
+                const numbersFound = line.match(/\b\d{2}\b/g);
+                if (numbersFound && numbersFound.length >= JUGADA_SIZE) {
+                    for (let i = 0; i < numbersFound.length; i += JUGADA_SIZE) {
+                        const grupo = numbersFound.slice(i, i + JUGADA_SIZE);
+                        if (grupo.length === JUGADA_SIZE) todasLasJugadas.push(grupo.join(','));
+                    }
+                } else if (line.toLowerCase().includes("refe:")) {
+                    const idMatch = line.match(/\d+/);
+                    if (idMatch) refeExtraido = idMatch[0];
+                } else if (line.length > 2 && !line.includes(":") && isNaN(line.charAt(0))) {
+                    nombreExtraido = line.toUpperCase();
+                }
+            });
+
+            if (nombreExtraido) document.getElementById('nombre').value = nombreExtraido;
+            if (refeExtraido) document.getElementById('refe').value = refeExtraido;
+            if (todasLasJugadas.length > 0) {
+                document.getElementById('jugadas-procesadas').value = todasLasJugadas.join(' | ');
+            }
+            alert("✅ Datos extraídos. Revisa los campos antes de guardar.");
+        });
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // --- REGISTRO DE PARTICIPANTES ---
+    // ---------------------------------------------------------------------------------------
+    const formParticipante = document.getElementById('form-participante');
+    const listaParticipantes = document.getElementById('lista-participantes');
+
+    if (formParticipante) {
+        formParticipante.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value.trim();
+            const refe = document.getElementById('refe').value.trim();
+            const jugadasRaw = document.getElementById('jugadas-procesadas').value.trim();
+            
+            if (!nombre || !refe || !jugadasRaw) return alert("Faltan datos de la jugada.");
+
+            const gruposJugadas = jugadasRaw.split('|');
+            gruposJugadas.forEach(grupo => {
+                const nums = grupo.split(',').map(n => n.trim()).filter(n => n !== "");
+                if (nums.length === JUGADA_SIZE) {
+                    participantes.push({
+                        nombre: nombre,
+                        refe: refe,
+                        jugada: nums // Nota: el index.html busca 'jugada', no 'jugadas'
+                    });
+                }
+            });
+
+            await actualizarEnNube('participantes', participantes);
+            renderTodo();
+            formParticipante.reset();
+            inputPasteData.value = "";
+            alert("✅ Jugada(s) guardada(s) en la nube.");
+        });
+    }
+
+    function renderParticipantes() {
+        if (!listaParticipantes) return;
+        const filtro = document.getElementById('input-buscar-participante').value.toLowerCase();
+        listaParticipantes.innerHTML = '';
         
-        jugadasRaw.forEach(grupo => {
-            const nums = grupo.split(',').map(n => n.trim());
-            if (nums.length === 7) {
-                participantes.push({
-                    nombre: document.getElementById('nombre').value.toUpperCase(),
-                    refe: document.getElementById('refe').value,
-                    jugada: nums
-                });
-            }
+        const filtrados = participantes.filter(p => 
+            p.nombre.toLowerCase().includes(filtro) || p.refe.includes(filtro)
+        );
+        
+        filtrados.forEach((p, idx) => {
+            const li = document.createElement('li');
+            li.className = "li-admin-item";
+            li.innerHTML = `
+                <span>#${idx + 1} - <strong>${p.nombre}</strong> (${p.refe})</span>
+                <button class="btn-eliminar" onclick="eliminarParticipante(${idx})">Eliminar</button>
+            `;
+            listaParticipantes.appendChild(li);
         });
-
-        await actualizarNube('participantes', participantes);
-        cargarTodo();
-        e.target.reset();
-        document.getElementById('input-paste-data').value = "";
-    };
-
-    // --- RESULTADOS ---
-    document.getElementById('form-resultados').onsubmit = async (e) => {
-        e.preventDefault();
-        resultados.push({
-            sorteo: document.getElementById('sorteo-hora').value,
-            numero: document.getElementById('numero-ganador').value.padStart(2, '0')
-        });
-        await actualizarNube('resultados', resultados);
-        cargarTodo();
-        e.target.reset();
-    };
-
-    // --- FINANZAS ---
-    document.getElementById('form-finanzas').onsubmit = async (e) => {
-        e.preventDefault();
-        finanzas.ventas = document.getElementById('input-ventas').value;
-        finanzas.recaudado = document.getElementById('input-recaudado').value;
-        finanzas.acumulado = document.getElementById('input-acumulado').value;
-        await actualizarNube('finanzas', finanzas);
-        alert("💰 Finanzas sincronizadas");
-    };
-
-    function renderizar() {
-        const listaP = document.getElementById('lista-participantes');
-        listaP.innerHTML = participantes.map((p, i) => `
-            <li style="background:#f4f4f4; padding:8px; margin-bottom:5px; border-radius:5px;">
-                <strong>${p.nombre}</strong> (${p.refe}) <br>
-                <small>N°s: ${p.jugada.join('-')}</small>
-                <button onclick="borrarP(${i})" style="float:right; color:red;">Eliminar</button>
-            </li>
-        `).join('');
-
-        const listaR = document.getElementById('lista-resultados');
-        listaR.innerHTML = resultados.map((r, i) => `
-            <li>${r.sorteo}: <strong>${r.numero}</strong> <button onclick="borrarR(${i})">x</button></li>
-        `).join('');
     }
 
-    window.borrarP = async (i) => { participantes.splice(i, 1); await actualizarNube('participantes', participantes); cargarTodo(); };
-    window.borrarR = async (i) => { resultados.splice(i, 1); await actualizarNube('resultados', resultados); cargarTodo(); };
+    window.eliminarParticipante = async (index) => {
+        if (confirm("¿Eliminar esta jugada permanentemente?")) {
+            participantes.splice(index, 1);
+            await actualizarEnNube('participantes', participantes);
+            renderTodo();
+        }
+    };
 
-    cargarTodo();
+    // ---------------------------------------------------------------------------------------
+    // --- INICIALIZACIÓN Y BUSCADOR ---
+    // ---------------------------------------------------------------------------------------
+    
+    const inputBuscar = document.getElementById('input-buscar-participante');
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', renderParticipantes);
+    }
+
+    const btnReiniciar = document.getElementById('btn-reiniciar-datos');
+    if (btnReiniciar) {
+        btnReiniciar.addEventListener('click', async () => {
+            if (confirm("⚠️ ¿ESTÁS SEGURO? Esto borrará TODO (Participantes, Resultados y Finanzas).")) {
+                const clave = prompt("Confirma con tu clave de admin:");
+                if (CLAVES_VALIDAS.includes(clave)) {
+                    await actualizarEnNube('participantes', []);
+                    await actualizarEnNube('resultados', []);
+                    await actualizarEnNube('finanzas', { ventas: 0, recaudado: 0, acumulado: 0 });
+                    
+                    participantes = [];
+                    resultados = [];
+                    finanzas = { ventas: 0, recaudado: 0, acumulado: 0 };
+                    renderTodo();
+                    alert("✅ Sistema reiniciado por completo.");
+                } else {
+                    alert("Clave incorrecta.");
+                }
+            }
+        });
+    }
+
+    // Carga inicial al arrancar
+    await cargarDatosDesdeSupabase();
 });
