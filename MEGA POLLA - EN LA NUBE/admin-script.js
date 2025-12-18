@@ -14,19 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. FUNCIÓN DE PROCESAMIENTO INTELIGENTE (REGLAS DE NEGOCIO) ---
     // ---------------------------------------------------------------------------------------
     function procesarYValidarJugada(numerosRaw, nombreParticipante) {
-        // A. Normalización y transformación: 0 -> "O", el "00" se mantiene.
+        // A. Transformación: 0 -> "O", el "00" se mantiene.
         let numeros = numerosRaw.map(n => {
             let num = n.trim().padStart(2, '0');
             if (num === "00") return "00";
-            
-            // Si el valor es 0 (pero no 00), se convierte en la letra O
             if (parseInt(num) === 0) return "O";
             return num;
         });
 
         let avisos = [];
 
-        // B. Regla de los 8 números: Prioridad eliminar el último si sobra
+        // B. Regla de los 8 números: Eliminar el último si sobra
         if (numeros.length > JUGADA_SIZE) {
             let eliminado = numeros.pop();
             avisos.push(`Se eliminó el número sobrante (${eliminado}).`);
@@ -34,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // C. Validar que tenga exactamente 7
         if (numeros.length < JUGADA_SIZE) {
-            alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números. Se requiere 7.`);
+            alert(`❌ ERROR en ${nombreParticipante}: Tiene ${numeros.length} números. Se requieren 7.`);
             return null;
         }
 
@@ -51,26 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (duplicado) {
-            // Intentar reemplazar el duplicado por "36"
             if (!numeros.includes("36")) {
                 let index = numeros.lastIndexOf(duplicado);
                 numeros[index] = "36";
                 avisos.push(`Duplicado (${duplicado}) reemplazado por 36.`);
             } else {
-                alert(`🚫 JUGADA NULA (${nombreParticipante}): Tiene duplicado (${duplicado}) y el 36 ya existe.`);
+                alert(`🚫 JUGADA NULA (${nombreParticipante}): Duplicado (${duplicado}) y el 36 ya existe.`);
                 return null;
             }
         }
 
         if (avisos.length > 0) {
-            alert(`📝 CORRECCIONES EN ${nombreParticipante}:\n${avisos.join('\n')}`);
+            alert(`📝 NOTA PARA ${nombreParticipante}:\n${avisos.join('\n')}`);
         }
 
         return numeros;
     }
 
     // ---------------------------------------------------------------------------------------
-    // --- 2. CARGA Y GUARDADO EN SUPABASE ---
+    // --- 2. COMUNICACIÓN CON SUPABASE ---
     // ---------------------------------------------------------------------------------------
     async function cargarDatosDesdeNube() {
         try {
@@ -84,91 +81,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderizarTodo();
         } catch (error) {
-            console.error("Error al cargar datos:", error);
+            console.error("Error cargando datos:", error);
         }
-    }
-
-    async function guardarParticipanteNube(nuevoParticipante) {
-        const { error } = await _supabase.from('participantes').insert([nuevoParticipante]);
-        if (error) alert("Error al guardar participante");
-        else cargarDatosDesdeNube();
-    }
-
-    async function guardarResultadoNube(nuevoResultado) {
-        const { error } = await _supabase.from('resultados').insert([nuevoResultado]);
-        if (error) alert("Error al guardar resultado");
-        else cargarDatosDesdeNube();
     }
 
     async function actualizarFinanzasNube() {
-        const { error } = await _supabase
-            .from('finanzas')
-            .update({
-                ventas: finanzas.ventas,
-                recaudado: finanzas.recaudado,
-                acumulado1: finanzas.acumulado1
-            })
-            .eq('id', 1);
-        
+        const { error } = await _supabase.from('finanzas').update(finanzas).eq('id', 1);
         if (error) alert("Error al actualizar finanzas");
-        else {
-            alert("✅ Finanzas actualizadas.");
-            cargarDatosDesdeNube();
-        }
+        else { alert("✅ Finanzas actualizadas."); cargarDatosDesdeNube(); }
     }
 
     // ---------------------------------------------------------------------------------------
     // --- 3. GESTIÓN DE FORMULARIOS ---
     // ---------------------------------------------------------------------------------------
 
-    // Formulario de Finanzas
-    document.getElementById('form-finanzas').addEventListener('submit', (e) => {
-        e.preventDefault();
-        finanzas.ventas = parseInt(document.getElementById('input-ventas').value);
-        finanzas.recaudado = parseFloat(document.getElementById('input-recaudado').value);
-        finanzas.acumulado1 = parseFloat(document.getElementById('input-acumulado').value);
-        actualizarFinanzasNube();
-    });
-
-    // Formulario de Resultados (CON REGLA DE LA "O")
-    document.getElementById('form-resultados').addEventListener('submit', (e) => {
+    // Formulario de Resultados (0 -> O)
+    document.getElementById('form-resultados').addEventListener('submit', async (e) => {
         e.preventDefault();
         let numRaw = document.getElementById('numero-ganador').value.trim();
-        let numFinal = "";
+        let numFinal = (numRaw === "0" || (parseInt(numRaw) === 0 && numRaw !== "00")) ? "O" : numRaw.padStart(2, '0');
 
-        // Si pone 0, se guarda como "O"
-        if (numRaw === "0" || (parseInt(numRaw) === 0 && numRaw !== "00")) {
-            numFinal = "O";
-        } else {
-            numFinal = numRaw.padStart(2, '0');
-        }
-
-        const nuevoRes = {
+        const { error } = await _supabase.from('resultados').insert([{
             sorteo: document.getElementById('sorteo-hora').value,
             numero: numFinal
-        };
-        guardarResultadoNube(nuevoRes);
-        e.target.reset();
+        }]);
+        if (!error) { e.target.reset(); cargarDatosDesdeNube(); }
     });
 
-    // Procesar Pegado de Datos
+    // Procesar Pegado
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
-        
         let numerosEncontrados = [];
-        let nombre = "Sin Nombre";
-        let refe = "";
+        let nombre = "Sin Nombre", refe = "";
 
         lineas.forEach(linea => {
             const matches = linea.match(/\b\d{1,2}\b/g);
-            if (matches && matches.length >= 5) {
-                numerosEncontrados.push(matches.join(','));
-            } else if (linea.toLowerCase().includes("identificación") || linea.toLowerCase().includes("refe")) {
-                refe = linea.replace(/\D/g, "");
-            } else if (linea.length > 3 && !refe) {
-                nombre = linea.toUpperCase();
-            }
+            if (matches && matches.length >= 5) numerosEncontrados.push(matches.join(','));
+            else if (linea.toLowerCase().includes("refe") || linea.toLowerCase().includes("identificación")) refe = linea.replace(/\D/g, "");
+            else if (linea.length > 3 && !refe) nombre = linea.toUpperCase();
         });
 
         document.getElementById('nombre').value = nombre;
@@ -176,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
     });
 
-    // Registrar Participante (CON VALIDACIONES INTELIGENTES)
+    // REGISTRAR PARTICIPANTE (Nombres limpios y Nros correlativos reales)
     document.getElementById('form-participante').addEventListener('submit', async (e) => {
         e.preventDefault();
         const nombreBase = document.getElementById('nombre').value.trim();
@@ -185,30 +136,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!refe) return alert("El REFE es obligatorio");
 
-        for (let [index, jugadaStr] of jugadasRaw.entries()) {
+        // Usamos un bucle para procesar cada jugada individualmente
+        for (let jugadaStr of jugadasRaw) {
             if (jugadaStr.trim() === "") continue;
 
             let numSucios = jugadaStr.split(',').map(n => n.trim()).filter(n => n !== "");
-            let nombreFinal = jugadasRaw.length > 1 ? `${nombreBase} (${index + 1})` : nombreBase;
             
-            let jugadaLimpia = procesarYValidarJugada(numSucios, nombreFinal);
+            // Validamos la jugada con el nombre limpio
+            let jugadaLimpia = procesarYValidarJugada(numSucios, nombreBase);
 
             if (jugadaLimpia) {
+                // Cálculo de número correlativo real basado en la lista actual
+                const proximoNro = participantes.length + 1;
+
                 const nuevaJugada = {
-                    nro: participantes.length + 1,
-                    nombre: nombreFinal,
+                    nro: proximoNro,
+                    nombre: nombreBase, 
                     refe: refe,
                     jugadas: jugadaLimpia 
                 };
-                await guardarParticipanteNube(nuevaJugada);
+
+                const { error } = await _supabase.from('participantes').insert([nuevaJugada]);
+                
+                if (!error) {
+                    // Actualizamos la lista local para que la siguiente jugada del bucle tenga el ID correcto
+                    participantes.push(nuevaJugada);
+                }
             }
         }
+
+        alert("✅ Registro(s) completado(s) exitosamente.");
         e.target.reset();
         document.getElementById('input-paste-data').value = "";
+        cargarDatosDesdeNube();
     });
 
     // ---------------------------------------------------------------------------------------
-    // --- 4. RENDERIZADO ---
+    // --- 4. RENDERIZADO Y UTILIDADES ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
         if (finanzas) {
@@ -243,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-reiniciar-datos').addEventListener('click', async () => {
         const clave = prompt("Clave de seguridad para borrar TODO:");
         if (CLAVES_VALIDAS.includes(clave)) {
-            if (confirm("¿Borrar toda la base de datos?")) {
+            if (confirm("¿Estás seguro de borrar toda la base de datos?")) {
                 await _supabase.from('participantes').delete().neq('id', 0);
                 await _supabase.from('resultados').delete().neq('id', 0);
                 cargarDatosDesdeNube();
@@ -254,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- BLOQUEO INICIAL ---
     const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
     if (!CLAVES_VALIDAS.includes(claveAcceso)) {
-        document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
+        document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
     } else {
         cargarDatosDesdeNube();
     }
