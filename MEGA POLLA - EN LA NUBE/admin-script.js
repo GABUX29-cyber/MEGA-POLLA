@@ -11,28 +11,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let finanzas = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
 
     // ---------------------------------------------------------------------------------------
-    // --- 1. FUNCIÓN DE PROCESAMIENTO INTELIGENTE (REGLAS DE NEGOCIO) ---
+    // --- 1. FUNCIÓN DE PROCESAMIENTO (REGLAS DE NEGOCIO) ---
     // ---------------------------------------------------------------------------------------
     function procesarYValidarJugada(numerosRaw, nombreParticipante) {
         let numeros = numerosRaw.map(n => {
             let num = n.trim().padStart(2, '0');
             if (num === "00") return "00";
-            if (parseInt(num) === 0) return "O";
+            if (parseInt(num) === 0) return "O"; // Regla de la letra O
             return num;
         });
 
         let avisos = [];
 
+        // Regla: Máximo 7 números (elimina el sobrante si hay 8)
         if (numeros.length > JUGADA_SIZE) {
             let eliminado = numeros.pop();
             avisos.push(`Se eliminó el número sobrante (${eliminado}).`);
         }
 
+        // Validación: Mínimo 7 números
         if (numeros.length < JUGADA_SIZE) {
             alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números. Se requiere 7.`);
             return null;
         }
 
+        // Gestión de Duplicados
         let counts = {};
         let duplicado = null;
         numeros.forEach(n => counts[n] = (counts[n] || 0) + 1);
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---------------------------------------------------------------------------------------
-    // --- 2. CARGA Y GUARDADO EN SUPABASE ---
+    // --- 2. CARGA Y ACTUALIZACIÓN EN SUPABASE ---
     // ---------------------------------------------------------------------------------------
     async function cargarDatosDesdeNube() {
         try {
@@ -94,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. GESTIÓN DE FORMULARIOS ---
     // ---------------------------------------------------------------------------------------
 
+    // Formulario de Finanzas
     document.getElementById('form-finanzas').addEventListener('submit', (e) => {
         e.preventDefault();
         finanzas.ventas = parseInt(document.getElementById('input-ventas').value);
@@ -102,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarFinanzasNube();
     });
 
+    // Formulario de Resultados
     document.getElementById('form-resultados').addEventListener('submit', async (e) => {
         e.preventDefault();
         let numRaw = document.getElementById('numero-ganador').value.trim();
@@ -115,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!error) { e.target.reset(); cargarDatosDesdeNube(); }
     });
 
+    // Procesar Pegado de Datos
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
@@ -122,10 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let nombre = "Sin Nombre", refe = "";
 
         lineas.forEach(linea => {
+            // Captura grupos de números (ahora más flexible)
             const matches = linea.match(/\b\d{1,2}\b/g);
-            if (matches && matches.length >= 5) numerosEncontrados.push(matches.join(','));
-            else if (linea.toLowerCase().includes("refe")) refe = linea.replace(/\D/g, "");
-            else if (linea.length > 3 && !refe) nombre = linea.toUpperCase();
+            if (matches && matches.length >= 5) {
+                numerosEncontrados.push(matches.join(','));
+            } else if (linea.toLowerCase().includes("refe") || linea.toLowerCase().includes("identificación")) {
+                refe = linea.replace(/\D/g, "");
+            } else if (linea.length > 3 && !refe) {
+                nombre = linea.toUpperCase();
+            }
         });
 
         document.getElementById('nombre').value = nombre;
@@ -133,23 +144,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
     });
 
-    // --- REGISTRO SECUENCIAL CORREGIDO ---
+    // --- REGISTRO SECUENCIAL CORREGIDO (NUMERACIÓN Y SEPARADORES) ---
     document.getElementById('form-participante').addEventListener('submit', async (e) => {
         e.preventDefault();
         const nombreBase = document.getElementById('nombre').value.trim();
         const refe = document.getElementById('refe').value.trim();
+        // Separamos las múltiples jugadas por el caracter '|'
         const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|').map(s => s.trim()).filter(s => s !== "");
 
         if (!refe) return alert("El REFE es obligatorio");
 
-        // Usamos for...of con await para obligar al sistema a esperar que cada jugada se guarde
+        // Bucle for...of con await para que sea 100% secuencial
         for (let jugadaStr of jugadasRaw) {
-            let numSucios = jugadaStr.split(',').map(n => n.trim()).filter(n => n !== "");
+            // Acepta comas (,) o barras (/) como separador de números
+            let numSucios = jugadaStr.split(/[,/]/).map(n => n.trim()).filter(n => n !== "");
             let jugadaLimpia = procesarYValidarJugada(numSucios, nombreBase);
 
             if (jugadaLimpia) {
-                // Se calcula el número JUSTO ANTES de guardar
-                const proximoNro = participantes.length + 1;
+                // Consultamos el conteo exacto a la nube antes de cada inserción
+                const { count } = await _supabase
+                    .from('participantes')
+                    .select('*', { count: 'exact', head: true });
+
+                const proximoNro = (count || 0) + 1;
 
                 const nuevaJugada = {
                     nro: proximoNro,
@@ -160,16 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const { error } = await _supabase.from('participantes').insert([nuevaJugada]);
                 
-                if (!error) {
-                    // Actualizamos la lista local inmediatamente para que la siguiente vuelta vea el nuevo largo
-                    participantes.push(nuevaJugada);
-                } else {
-                    console.error("Error guardando:", error);
+                if (error) {
+                    console.error("Error al guardar jugada:", error);
                 }
             }
         }
 
-        alert("✅ Todas las jugadas registradas correlativamente.");
+        alert("✅ Todas las jugadas registradas con números correlativos.");
         e.target.reset();
         document.getElementById('input-paste-data').value = "";
         cargarDatosDesdeNube(); 
@@ -204,14 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.eliminarResultadoNube = async (id) => {
-        await _supabase.from('resultados').delete().eq('id', id);
-        cargarDatosDesdeNube();
+        if (confirm("¿Eliminar este resultado?")) {
+            await _supabase.from('resultados').delete().eq('id', id);
+            cargarDatosDesdeNube();
+        }
     };
 
     document.getElementById('btn-reiniciar-datos').addEventListener('click', async () => {
         const clave = prompt("Clave de seguridad para borrar TODO:");
         if (CLAVES_VALIDAS.includes(clave)) {
-            if (confirm("¿Borrar toda la base de datos?")) {
+            if (confirm("¿Borrar toda la base de datos de participantes y resultados?")) {
                 await _supabase.from('participantes').delete().neq('id', 0);
                 await _supabase.from('resultados').delete().neq('id', 0);
                 cargarDatosDesdeNube();
@@ -219,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Bloqueo Inicial
     const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
     if (!CLAVES_VALIDAS.includes(claveAcceso)) {
         document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
