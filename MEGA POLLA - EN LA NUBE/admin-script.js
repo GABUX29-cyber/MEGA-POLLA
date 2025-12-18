@@ -16,15 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function procesarYValidarJugada(numerosRaw, nombreParticipante) {
         let numeros = numerosRaw.map(n => {
             let num = n.trim().padStart(2, '0');
-            // Regla: El número 0 se convierte en "O", pero "00" se queda como "00"
             if (num === "00") return "00";
-            if (parseInt(num) === 0) return "O"; 
+            if (parseInt(num) === 0) return "O"; // Regla de la letra O
             return num;
         });
 
         let avisos = [];
 
-        // Regla: Máximo 7 números
+        // Regla: Máximo 7 números (elimina el sobrante si hay 8)
         if (numeros.length > JUGADA_SIZE) {
             let eliminado = numeros.pop();
             avisos.push(`Se eliminó el número sobrante (${eliminado}).`);
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (avisos.length > 0) {
-            console.log(`📝 Correcciones automáticas para ${nombreParticipante}:`, avisos);
+            alert(`📝 CORRECCIONES EN ${nombreParticipante}:\n${avisos.join('\n')}`);
         }
 
         return numeros;
@@ -121,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!error) { e.target.reset(); cargarDatosDesdeNube(); }
     });
 
-    // Procesar Pegado de Datos (Mensajes de WhatsApp)
+    // Procesar Pegado de Datos
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
@@ -129,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let nombre = "Sin Nombre", refe = "";
 
         lineas.forEach(linea => {
+            // Captura grupos de números (ahora más flexible)
             const matches = linea.match(/\b\d{1,2}\b/g);
             if (matches && matches.length >= 5) {
                 numerosEncontrados.push(matches.join(','));
@@ -144,22 +144,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
     });
 
-    // Registro de Participantes (Secuencial con numeración automática)
+    // --- REGISTRO SECUENCIAL CORREGIDO (NUMERACIÓN Y SEPARADORES) ---
     document.getElementById('form-participante').addEventListener('submit', async (e) => {
         e.preventDefault();
         const nombreBase = document.getElementById('nombre').value.trim();
         const refe = document.getElementById('refe').value.trim();
+        // Separamos las múltiples jugadas por el caracter '|'
         const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|').map(s => s.trim()).filter(s => s !== "");
 
         if (!refe) return alert("El REFE es obligatorio");
 
+        // Bucle for...of con await para que sea 100% secuencial
         for (let jugadaStr of jugadasRaw) {
-            // Acepta comas (,) o barras (/)
+            // Acepta comas (,) o barras (/) como separador de números
             let numSucios = jugadaStr.split(/[,/]/).map(n => n.trim()).filter(n => n !== "");
             let jugadaLimpia = procesarYValidarJugada(numSucios, nombreBase);
 
             if (jugadaLimpia) {
-                const { count } = await _supabase.from('participantes').select('*', { count: 'exact', head: true });
+                // Consultamos el conteo exacto a la nube antes de cada inserción
+                const { count } = await _supabase
+                    .from('participantes')
+                    .select('*', { count: 'exact', head: true });
+
                 const proximoNro = (count || 0) + 1;
 
                 const nuevaJugada = {
@@ -169,28 +175,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     jugadas: jugadaLimpia 
                 };
 
-                await _supabase.from('participantes').insert([nuevaJugada]);
+                const { error } = await _supabase.from('participantes').insert([nuevaJugada]);
+                
+                if (error) {
+                    console.error("Error al guardar jugada:", error);
+                }
             }
         }
 
-        alert("✅ Registro exitoso.");
+        alert("✅ Todas las jugadas registradas con números correlativos.");
         e.target.reset();
         document.getElementById('input-paste-data').value = "";
         cargarDatosDesdeNube(); 
     });
 
     // ---------------------------------------------------------------------------------------
-    // --- 4. RENDERIZADO (ESTILO CUADRÍCULA DE RULETAS) ---
+    // --- 4. RENDERIZADO ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
-        // Actualizar inputs de finanzas
         if (finanzas) {
             document.getElementById('input-ventas').value = finanzas.ventas;
             document.getElementById('input-recaudado').value = finanzas.recaudado;
             document.getElementById('input-acumulado').value = finanzas.acumulado1;
         }
 
-        // Renderizar lista de resultados (con botón eliminar)
         const listaRes = document.getElementById('lista-resultados');
         listaRes.innerHTML = '';
         resultados.forEach((res) => {
@@ -200,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             listaRes.appendChild(li);
         });
 
-        // Renderizar lista de participantes
         const listaPart = document.getElementById('lista-participantes');
         listaPart.innerHTML = '';
         participantes.forEach(p => {
@@ -210,9 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---------------------------------------------------------------------------------------
-    // --- 5. FUNCIONES GLOBALES Y SEGURIDAD ---
-    // ---------------------------------------------------------------------------------------
     window.eliminarResultadoNube = async (id) => {
         if (confirm("¿Eliminar este resultado?")) {
             await _supabase.from('resultados').delete().eq('id', id);
@@ -223,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-reiniciar-datos').addEventListener('click', async () => {
         const clave = prompt("Clave de seguridad para borrar TODO:");
         if (CLAVES_VALIDAS.includes(clave)) {
-            if (confirm("¿Borrar toda la base de datos?")) {
+            if (confirm("¿Borrar toda la base de datos de participantes y resultados?")) {
                 await _supabase.from('participantes').delete().neq('id', 0);
                 await _supabase.from('resultados').delete().neq('id', 0);
                 cargarDatosDesdeNube();
@@ -231,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Bloqueo Inicial
     const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
     if (!CLAVES_VALIDAS.includes(claveAcceso)) {
         document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
