@@ -1,5 +1,5 @@
 /* ========================================================= */
-/* 1. ESTILOS GENERALES Y LAYOUT BASE                       */
+/* 1. ESTILOS GENERALES Y LAYOUT BASE                        */
 /* ========================================================= */
 body {
     font-family: 'Montserrat', sans-serif;
@@ -13,11 +13,10 @@ body {
     min-height: 100vh;
 }
 
-/* AJUSTE CRUCIAL: Forzar texto oscuro dentro de secciones/tarjetas blancas */
+/* Forzar texto oscuro dentro de secciones/tarjetas blancas */
 .card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
     color: #333; 
 }
-
 
 header {
     text-align: center;
@@ -28,7 +27,7 @@ header {
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 900px; /* Ancho máximo para el header y contenedores */
+    max-width: 900px;
     box-sizing: border-box;
 }
 
@@ -48,11 +47,11 @@ header p {
 }
 
 /* ========================================================= */
-/* 2. TARJETAS (CARDS) Y CONTENEDORES                       */
+/* 2. TARJETAS (CARDS) Y CONTENEDORES                        */
 /* ========================================================= */
 .card-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Dos columnas en escritorio */
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
     width: 100%;
     max-width: 900px;
@@ -69,7 +68,6 @@ header p {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     text-align: center;
-    transition: transform 0.2s ease;
 }
 
 .card h2 {
@@ -79,10 +77,12 @@ header p {
     border-bottom: 2px solid #fdd835;
     padding-bottom: 8px;
     display: inline-block;
+    text-transform: uppercase;
+    font-weight: 800;
 }
 
 /* ========================================================= */
-/* 3. ESTADÍSTICAS Y NÚMEROS DESTACADOS                     */
+/* 3. ESTADÍSTICAS Y VALORES                                 */
 /* ========================================================= */
 .estadistica i {
     font-size: 2em;
@@ -104,55 +104,67 @@ header p {
     font-weight: 700;
 }
 
-/* Colores específicos para tipos de estadística */
 .ventas .valor { color: #1976d2; }
 .recaudado .valor { color: #388e3c; }
 .acumulado .valor { color: #d32f2f; }
 .repartir .valor { color: #7b1fa2; }
-.ganadores .valor { color: #f57c00; }
 
 /* ========================================================= */
-/* 4. RESULTADOS DEL DÍA (BOLAS DE LOTERÍA)                 */
+/* 4. NUEVA TABLA DE RESULTADOS (CUADRÍCULA HORARIA)         */
 /* ========================================================= */
-.numeros-ganadores {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
+.tabla-resultados-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Permite scroll en celulares */
     margin-top: 10px;
+    border-radius: 8px;
 }
 
-.resultado-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.tabla-horarios {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px; /* Evita que se amontone el texto */
+    font-size: 0.9em;
 }
 
-.sorteo-name {
-    font-size: 0.7em;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: #555;
-    text-transform: uppercase;
-}
-
-.numero-ball {
-    width: 45px;
-    height: 45px;
-    background: radial-gradient(circle at 30% 30%, #fdd835, #fbc02d);
-    color: #333;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.tabla-horarios thead th {
+    background-color: #333;
+    color: #fdd835;
+    padding: 10px 5px;
     font-weight: 800;
-    font-size: 1.3em;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 -2px 5px rgba(0,0,0,0.1);
-    border: 2px solid #333;
+    border: 1px solid #444;
+}
+
+.col-ruleta {
+    background-color: #fdd835 !important;
+    color: #333 !important;
+    font-weight: 800;
+    text-align: left;
+    padding: 12px;
+    text-transform: uppercase;
+    border: 1px solid #e2bc07;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+
+.celda-numero {
+    font-weight: 800;
+    font-size: 1.2em;
+    color: #333;
+    text-align: center;
+    background-color: #fff;
+    border: 1px solid #eee;
+}
+
+.sin-resultado {
+    color: #bbb;
+    background-color: #fafafa;
+    text-align: center;
+    border: 1px solid #eee;
 }
 
 /* ========================================================= */
-/* 5. TABLA DE RANKING / PARTICIPANTES                      */
+/* 5. TABLA DE RANKING / PARTICIPANTES                       */
 /* ========================================================= */
 .ranking {
     overflow-x: auto;
@@ -162,7 +174,6 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
-    font-size: 0.9em;
 }
 
 thead th {
@@ -179,31 +190,28 @@ tbody td {
     border-bottom: 1px solid #eee;
     color: #333;
     font-weight: 600;
+    text-align: center;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+.nombre-participante {
+    text-align: left;
+    text-transform: uppercase;
 }
 
-tbody tr:hover {
-    background-color: #fffde7;
-}
-
-/* Cajas de números en la tabla */
+/* Cajas de números y Aciertos */
 .ranking-box {
     display: inline-block;
-    width: 28px;
-    height: 28px;
-    line-height: 28px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
     background-color: #eee;
     border-radius: 4px;
     text-align: center;
     font-weight: 700;
     border: 1px solid #ccc;
-    font-size: 0.85em;
+    font-size: 0.9em;
 }
 
-/* Estilo cuando el número es un acierto (hit) */
 .ranking-box.hit {
     background-color: #4caf50;
     color: white;
@@ -218,16 +226,14 @@ tbody tr:hover {
     height: 35px;
     line-height: 35px;
     border-radius: 50%;
-    font-size: 1em;
 }
 
 .ganador-final {
     background-color: #d32f2f;
     color: white;
-    padding: 5px 10px;
+    padding: 5px 12px;
     border-radius: 20px;
     font-weight: 800;
-    font-size: 0.8em;
     animation: pulse 1.5s infinite;
     display: inline-block;
 }
@@ -239,7 +245,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 6. FILTROS Y BUSCADOR                                    */
+/* 6. FILTROS Y BUSCADOR                                     */
 /* ========================================================= */
 .filtro-container {
     width: 100%;
@@ -249,7 +255,6 @@ tbody tr:hover {
 
 .filtro-input-wrapper {
     position: relative;
-    width: 100%;
 }
 
 .filtro-input-wrapper i {
@@ -268,18 +273,13 @@ tbody tr:hover {
     background-color: #fff;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     font-family: 'Montserrat', sans-serif;
-    font-size: 1em;
-    box-sizing: border-box;
     outline: none;
+    box-sizing: border-box;
 }
 
 /* ========================================================= */
-/* 7. BOTÓN PDF                                             */
+/* 7. BOTÓN PDF                                              */
 /* ========================================================= */
-.pdf-container {
-    margin-bottom: 20px;
-}
-
 #btn-descargar-pdf {
     background-color: #d32f2f;
     color: white;
@@ -288,20 +288,15 @@ tbody tr:hover {
     border-radius: 8px;
     font-weight: 700;
     cursor: pointer;
-    font-family: 'Montserrat', sans-serif;
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 20px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    transition: background 0.2s;
-}
-
-#btn-descargar-pdf:hover {
-    background-color: #b71c1c;
 }
 
 /* ========================================================= */
-/* 8. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS)                 */
+/* 8. PANEL DE ADMINISTRACIÓN                                */
 /* ========================================================= */
 .admin-section {
     background-color: white;
@@ -314,21 +309,15 @@ tbody tr:hover {
     box-sizing: border-box;
 }
 
-form label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 700;
-    color: #444;
-}
+.admin-section h2 { border-bottom: 2px solid #388e3c; }
 
-form input, form select {
+form input, form select, form textarea {
     width: 100%;
     padding: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-family: 'Montserrat', sans-serif;
-    font-size: 1em;
     box-sizing: border-box;
 }
 
@@ -340,122 +329,29 @@ form button {
     border: none;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 1.1em;
     cursor: pointer;
-    text-transform: uppercase;
-}
-
-form button:hover {
-    background-color: #2e7d32;
-}
-
-#lista-participantes, #lista-resultados {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-}
-
-#lista-participantes li, #lista-resultados li {
-    background-color: #f5f5f5;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    border-left: 5px solid #fdd835;
-    font-size: 0.9em;
-    color: #333;
-    font-weight: 600;
 }
 
 /* ========================================================= */
-/* 9. FOOTER                                                */
-/* ========================================================= */
-footer {
-    margin-top: auto;
-    padding: 20px;
-    text-align: center;
-    color: #999;
-    font-size: 0.8em;
-}
-
-/* ========================================================= */
-/* 10. MEDIA QUERIES (RESPONSIVE)                           */
+/* 9. RESPONSIVE                                             */
 /* ========================================================= */
 @media (max-width: 600px) {
-    .card-container {
-        grid-template-columns: 1fr;
-    }
-    
-    h1 {
-        font-size: 1.4em;
-    }
-    
-    .valor {
-        font-size: 1.4em;
-    }
-    
-    .ranking table {
-        font-size: 0.75em;
-    }
-    
-    .ranking-box {
-        width: 22px;
-        height: 22px;
-        line-height: 22px;
-        font-size: 0.75em;
-    }
-    
-    .nombre-participante {
-        max-width: 80px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    .card-container { grid-template-columns: 1fr; }
+    h1 { font-size: 1.3em; }
+    .valor { font-size: 1.4em; }
+    .ranking table { font-size: 0.75em; }
+    .ranking-box { width: 22px; height: 22px; line-height: 22px; font-size: 0.75em; }
+    .nombre-participante { max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* ========================================================= */
-/* 11. ESTILOS DE IMPRESIÓN (PDF)                           */
+/* 10. ESTILOS DE IMPRESIÓN (PDF)                            */
 /* ========================================================= */
 @media print {
-    /* 1. OCULTA ELEMENTOS NO DESEADOS */
-    #btn-descargar-pdf, .filtro-container, footer, .pdf-container {
-        display: none !important;
-    }
-    
-    /* 2. FUERZA LA IMPRESIÓN DE FONDOS Y COLORES */
-    body, header, .card, .card-container, .card.ranking tbody tr {
-        -webkit-print-color-adjust: exact !important; 
-        color-adjust: exact !important;
-        color: #333 !important;
-    }
-    
-    body {
-        background-color: #f0f2f5 !important; 
-        padding: 0;
-        margin: 0;
-    }
-    
-    /* 3. Asegura el ancho completo y mantiene el tamaño original */
-    .card-container, header {
-        max-width: 100%;
-        width: 100%;
-        margin-bottom: 15px; 
-    }
-    
-    /* 4. Ajustes Mínimos para evitar cortes en la tabla ancha */
-    .card.ranking table {
-        page-break-inside: auto;
-        width: 100%; 
-        font-size: 0.85em; 
-    }
-    
-    /* Reducir padding de las celdas para ahorrar espacio */
-    .card.ranking thead th, .card.ranking tbody td {
-        padding: 4px 1px;
-    }
-    
-    /* Prevenir cortes de filas */
-    .card.ranking tbody tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
+    #btn-descargar-pdf, .filtro-container, footer, .admin-section { display: none !important; }
+    body { background-color: #fff !important; color: #000 !important; padding: 0; }
+    .card { box-shadow: none !important; border: 1px solid #eee; }
+    header, .col-ruleta, thead th { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .tabla-resultados-wrapper { overflow: visible !important; }
+    .tabla-horarios { min-width: 100%; font-size: 0.7em; }
 }

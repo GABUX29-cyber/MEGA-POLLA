@@ -5,22 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEGA POLLA - Resultados</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
     <header>
         <h1>MEGA POLLA</h1>
-        <p>EDICIÓN #324 | FECHA: 06/11/2025</p>
+        <p><i class="fas fa-calendar-alt"></i> Cargando fecha...</p>
     </header>
     
     <div class="card-container full-width">
-        <div class="card resultados-dia">
-            <h2>Resultados del día</h2>
-            <div id="numeros-ganadores-display" class="numeros-ganadores">
-                <p>No se han seleccionado números ganadores</p>
+        <div class="card">
+            <h2><i class="fas fa-clock"></i> Cuadro de Resultados del Día</h2>
+            <div id="numeros-ganadores-display">
+                <p>Esperando conexión con el servidor...</p>
             </div>
         </div>
     </div>
@@ -47,53 +46,57 @@
         <div class="card estadistica repartir">
             <i class="fas fa-hand-holding-usd"></i>
             <div class="valor" id="repartir75">0 BS</div>
-            <h3>PREMIO A REPARTIR (75%)</h3>
+            <h3>Premio a Repartir (75%)</h3>
         </div>
         
         <div class="card estadistica ganadores" style="grid-column: span 2;">
             <i class="fas fa-users"></i>
             <div class="valor" id="total-ganadores">0</div>
-            <h3>Ganadores (7 Aciertos)</h3> 
+            <h3>Ganadores con 7 Aciertos</h3> 
         </div>
     </div>
 
-    <div class="pdf-container">
+    <div class="pdf-container" style="text-align: center;">
         <button id="btn-descargar-pdf">
-            <i class="fas fa-file-pdf"></i> Descargar Resultados en PDF
+            <i class="fas fa-file-pdf"></i> Descargar Resultados / Imprimir
         </button>
     </div>
+
     <div class="filtro-container">
         <div class="filtro-input-wrapper">
             <i class="fas fa-search"></i>
             <input type="text" id="filtroParticipantes" class="filtro-input" placeholder="🔍 Buscar por Nombre o REFE...">
         </div>
     </div>
+
     <div class="card-container full-width">
-        
         <div class="card ranking">
-            <h2>PARTICIPANTES Y JUGADAS</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>NRO</th>
-                        <th>PARTICIPANTES</th>
-                        <th>REFE</th>
-                        <th colspan="7">JUGADAS</th> 
-                        <th>ACIERTOS</th>
-                    </tr>
-                </thead>
-                <tbody id="ranking-body">
-                </tbody>
-            </table>
+            <h2><i class="fas fa-list-ol"></i> Listado de Participantes</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NRO</th>
+                            <th>PARTICIPANTE</th>
+                            <th>REFE</th>
+                            <th colspan="7">JUGADA</th> 
+                            <th>ACIERTOS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2025 MEGA POLLA - Sistema de Gestión de Resultados.</p>
+        <p>&copy; 2025 MEGA POLLA - Sistema Profesional de Gestión de Resultados.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+
 </body>
 </html>

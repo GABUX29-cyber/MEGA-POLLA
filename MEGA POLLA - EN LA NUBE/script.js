@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
-                // Guardamos los resultados tal cual vienen de la nube (donde el 0 ya es "O")
+                // Guardamos los resultados (Si es 0 viene como "O")
                 resultadosDelDia = r.map(res => String(res.numero));
             }
             if (f) finanzasData = f;
@@ -61,21 +61,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Funciones Lógicas (Ajustadas para la letra "O")
+    // PARTE 2: Funciones Lógicas
     // ----------------------------------------------------------------
 
     function calcularAciertos(jugadorJugadas, ganadores) {
         let aciertos = 0;
-        // Convertimos todo a Set de Strings para comparación rápida
         const ganadoresSet = new Set(ganadores.map(val => String(val))); 
         
         jugadorJugadas.forEach(num => {
             let numProcesado = String(num);
-            // Si por algún motivo llega un "0" o "01" numérico, lo tratamos como "O"
-            if (numProcesado === "0" || numProcesado === "1") {
-                // Solo si tu lógica de negocio define que esos valores son "O"
-            }
-            
             if (ganadoresSet.has(numProcesado)) {
                 aciertos++;
             }
@@ -99,6 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // --- NUEVA FUNCIÓN DE RESULTADOS EN CUADRÍCULA ---
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
@@ -108,27 +103,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Limpiamos y creamos la tabla profesional (basada en tu nuevo CSS)
-        container.innerHTML = `
-            <table class="resultados-dia-tabla">
-                <thead><tr id="tabla-header-sorteos"></tr></thead>
-                <tbody><tr id="tabla-row-numeros"></tr></tbody>
-            </table>
-        `;
-        
-        const headerRow = document.getElementById('tabla-header-sorteos');
-        const bodyRow = document.getElementById('tabla-row-numeros');
+        const horas = ["8AM", "9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM", "6PM", "7PM"];
+        const nombresRuletas = ["LOTTO ACTIVO", "GRANJITA", "SELVA PLUS"];
 
+        // Organizar datos en mapa [Ruleta][Hora]
+        const mapaResultados = {};
         resultadosAdmin.forEach(res => {
-            const th = document.createElement('th');
-            th.textContent = res.sorteo;
-            headerRow.appendChild(th);
+            const partes = res.sorteo.split(' ');
+            const hora = partes.pop(); 
+            const nombreRuleta = partes.join(' ');
 
-            const td = document.createElement('td');
-            // Mostramos el valor tal cual (Si es "O", mostrará "O")
-            td.textContent = res.numero;
-            bodyRow.appendChild(td);
+            if (!mapaResultados[nombreRuleta]) {
+                mapaResultados[nombreRuleta] = {};
+            }
+            mapaResultados[nombreRuleta][hora] = res.numero;
         });
+
+        // Construcción de la tabla
+        let tablaHTML = `
+            <div class="tabla-resultados-wrapper">
+                <table class="tabla-horarios">
+                    <thead>
+                        <tr>
+                            <th style="background:#333; border:none;"></th>
+                            ${horas.map(h => `<th>${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        nombresRuletas.forEach(ruleta => {
+            tablaHTML += `<tr><td class="col-ruleta">${ruleta}</td>`;
+            horas.forEach(h => {
+                const num = (mapaResultados[ruleta] && mapaResultados[ruleta][h]) 
+                            ? mapaResultados[ruleta][h] 
+                            : "--";
+                const claseNum = num === "--" ? "sin-resultado" : "celda-numero";
+                tablaHTML += `<td class="${claseNum}">${num}</td>`;
+            });
+            tablaHTML += `</tr>`;
+        });
+
+        tablaHTML += `</tbody></table></div>`;
+        container.innerHTML = tablaHTML;
     }
 
     function renderRanking(filtro = "") {
@@ -157,7 +174,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             let jugadasHTML = '';
             for (let i = 0; i < JUGADA_SIZE; i++) {
                 const num = p.jugadas[i] ? String(p.jugadas[i]) : '--';
-                // Comparación de hit:
                 const esGanador = resultadosDelDia.includes(num);
                 const claseGanador = esGanador ? 'hit' : '';
                 jugadasHTML += `<td><span class="ranking-box ${claseGanador}">${num}</span></td>`;
