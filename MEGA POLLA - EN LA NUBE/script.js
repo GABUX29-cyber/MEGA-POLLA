@@ -16,12 +16,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const JUGADA_SIZE = 7; 
     let rankingCalculado = []; 
 
-    // Función para poner la FECHA ACTUAL (Sin número de edición)
     function establecerFechaReal() {
         const headerP = document.querySelector('header p');
         if (headerP) {
             const ahora = new Date();
-            // Formato: miércoles, 17 de diciembre de 2025 (o el que prefieras)
             const opciones = { 
                 weekday: 'long', 
                 day: '2-digit', 
@@ -29,43 +27,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 year: 'numeric' 
             };
             const fechaFormateada = ahora.toLocaleDateString('es-ES', opciones);
-            
-            // Actualizamos el texto para que solo diga la fecha con un estilo elegante
             headerP.style.textTransform = 'capitalize';
             headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fechaFormateada}`;
         }
     }
 
-    // Función principal para obtener datos de la nube
     async function cargarDatosDesdeNube() {
         try {
-            // 1. Obtener Participantes
-            const { data: p, error: ep } = await _supabase
-                .from('participantes')
-                .select('*')
-                .order('nro', { ascending: true });
-            
-            // 2. Obtener Resultados
-            const { data: r, error: er } = await _supabase
-                .from('resultados')
-                .select('*');
-            
-            // 3. Obtener Finanzas
-            const { data: f, error: ef } = await _supabase
-                .from('finanzas')
-                .select('*')
-                .single();
+            const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
+            const { data: r } = await _supabase.from('resultados').select('*');
+            const { data: f } = await _supabase.from('finanzas').select('*').single();
 
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
-                resultadosDelDia = r.map(res => res.numero);
+                // Guardamos los resultados tal cual vienen de la nube (donde el 0 ya es "O")
+                resultadosDelDia = r.map(res => String(res.numero));
             }
             if (f) finanzasData = f;
 
-            // Procesamos la lógica
             inicializarSistema();
-
         } catch (error) {
             console.error("Error cargando datos de Supabase:", error);
         }
@@ -80,15 +61,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Funciones Lógicas y de Cálculo
+    // PARTE 2: Funciones Lógicas (Ajustadas para la letra "O")
     // ----------------------------------------------------------------
 
     function calcularAciertos(jugadorJugadas, ganadores) {
         let aciertos = 0;
-        const ganadoresSet = new Set(ganadores.map(String)); 
+        // Convertimos todo a Set de Strings para comparación rápida
+        const ganadoresSet = new Set(ganadores.map(val => String(val))); 
         
         jugadorJugadas.forEach(num => {
-            if (ganadoresSet.has(String(num).padStart(2, '0')) || ganadoresSet.has(String(num))) {
+            let numProcesado = String(num);
+            // Si por algún motivo llega un "0" o "01" numérico, lo tratamos como "O"
+            if (numProcesado === "0" || numProcesado === "1") {
+                // Solo si tu lógica de negocio define que esos valores son "O"
+            }
+            
+            if (ganadoresSet.has(numProcesado)) {
                 aciertos++;
             }
         });
@@ -120,15 +108,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        container.innerHTML = ''; 
+        // Limpiamos y creamos la tabla profesional (basada en tu nuevo CSS)
+        container.innerHTML = `
+            <table class="resultados-dia-tabla">
+                <thead><tr id="tabla-header-sorteos"></tr></thead>
+                <tbody><tr id="tabla-row-numeros"></tr></tbody>
+            </table>
+        `;
+        
+        const headerRow = document.getElementById('tabla-header-sorteos');
+        const bodyRow = document.getElementById('tabla-row-numeros');
+
         resultadosAdmin.forEach(res => {
-            const ball = document.createElement('div');
-            ball.className = 'resultado-item';
-            ball.innerHTML = `
-                <span class="sorteo-name">${res.sorteo}</span>
-                <span class="numero-ball">${res.numero.toString().padStart(2, '0')}</span>
-            `;
-            container.appendChild(ball);
+            const th = document.createElement('th');
+            th.textContent = res.sorteo;
+            headerRow.appendChild(th);
+
+            const td = document.createElement('td');
+            // Mostramos el valor tal cual (Si es "O", mostrará "O")
+            td.textContent = res.numero;
+            bodyRow.appendChild(td);
         });
     }
 
@@ -157,8 +156,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             let jugadasHTML = '';
             for (let i = 0; i < JUGADA_SIZE; i++) {
-                const num = p.jugadas[i] ? p.jugadas[i].toString().padStart(2, '0') : '--';
-                const esGanador = resultadosDelDia.includes(num) || resultadosDelDia.includes(p.jugadas[i]);
+                const num = p.jugadas[i] ? String(p.jugadas[i]) : '--';
+                // Comparación de hit:
+                const esGanador = resultadosDelDia.includes(num);
                 const claseGanador = esGanador ? 'hit' : '';
                 jugadasHTML += `<td><span class="ranking-box ${claseGanador}">${num}</span></td>`;
             }
@@ -194,20 +194,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ----------------------------------------------------------------
-    // LÓGICA PARA DESCARGAR PDF
-    // ----------------------------------------------------------------
-    
+    // LÓGICA DE IMPRESIÓN
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
-            const originalTitle = document.title;
-            document.title = "Resultados_Mega_Polla";
             window.print();
-            document.title = originalTitle;
         });
     }
 
-    // INICIO DE CARGA
     cargarDatosDesdeNube();
 });
