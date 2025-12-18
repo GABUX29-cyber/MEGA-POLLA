@@ -1,5 +1,5 @@
 /* ========================================================= */
-/* 1. ESTILOS GENERALES Y LAYOUT BASE                       */
+/* 1. ESTILOS GENERALES Y LAYOUT BASE                        */
 /* ========================================================= */
 body {
     font-family: 'Montserrat', sans-serif;
@@ -48,7 +48,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 2. TARJETAS (CARDS) Y CONTENEDORES                       */
+/* 2. TARJETAS (CARDS) Y CONTENEDORES                        */
 /* ========================================================= */
 .card-container {
     display: grid;
@@ -112,7 +112,54 @@ header p {
 .ganadores .valor { color: #f57c00; }
 
 /* ========================================================= */
-/* 4. RESULTADOS DEL DÍA (BOLAS DE LOTERÍA)                 */
+/* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS) - NUEVO     */
+/* ========================================================= */
+.tabla-resultados-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+.tabla-horarios {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.tabla-horarios th, .tabla-horarios td {
+    border: 1px solid #ddd;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 0.85em;
+}
+
+.tabla-horarios thead th {
+    background-color: #333;
+    color: #fdd835;
+    font-weight: 700;
+}
+
+.col-ruleta {
+    background-color: #fdd835;
+    font-weight: 800;
+    color: #333;
+    text-align: left !important;
+    padding-left: 10px !important;
+}
+
+.celda-numero {
+    font-weight: 800;
+    font-size: 1.1em;
+    color: #d32f2f;
+}
+
+.sin-resultado {
+    color: #ccc;
+    font-weight: 400;
+}
+
+/* ========================================================= */
+/* 5. RESULTADOS DEL DÍA (BOLAS DE LOTERÍA)                  */
 /* ========================================================= */
 .numeros-ganadores {
     display: flex;
@@ -152,7 +199,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 5. TABLA DE RANKING / PARTICIPANTES                      */
+/* 6. TABLA DE RANKING / PARTICIPANTES                       */
 /* ========================================================= */
 .ranking {
     overflow-x: auto;
@@ -239,7 +286,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 6. FILTROS Y BUSCADOR                                    */
+/* 7. FILTROS Y BUSCADOR                                     */
 /* ========================================================= */
 .filtro-container {
     width: 100%;
@@ -274,7 +321,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 7. BOTÓN PDF                                             */
+/* 8. BOTÓN PDF                                              */
 /* ========================================================= */
 .pdf-container {
     margin-bottom: 20px;
@@ -301,7 +348,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 8. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS)                 */
+/* 9. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS)                 */
 /* ========================================================= */
 .admin-section {
     background-color: white;
@@ -367,7 +414,7 @@ form button:hover {
 }
 
 /* ========================================================= */
-/* 9. FOOTER                                                */
+/* 10. FOOTER                                                */
 /* ========================================================= */
 footer {
     margin-top: auto;
@@ -378,7 +425,7 @@ footer {
 }
 
 /* ========================================================= */
-/* 10. MEDIA QUERIES (RESPONSIVE)                           */
+/* 11. MEDIA QUERIES (RESPONSIVE)                            */
 /* ========================================================= */
 @media (max-width: 600px) {
     .card-container {
@@ -413,7 +460,16 @@ footer {
 }
 
 /* ========================================================= */
-/* 11. ESTILOS DE IMPRESIÓN (PDF)                           */
+/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)               */
+/* ========================================================= */
+.ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
+    font-family: 'Arial Black', sans-serif; /* Fuente más gruesa para destacar la O */
+    color: #fff;
+    background-color: #2e7d32;
+}
+
+/* ========================================================= */
+/* 13. ESTILOS DE IMPRESIÓN (PDF)                            */
 /* ========================================================= */
 @media print {
     /* 1. OCULTA ELEMENTOS NO DESEADOS */
