@@ -13,23 +13,14 @@
 
     <header>
         <h1>MEGA POLLA</h1>
-        <p>FECHA ACTUALIZADA</p>
+        <p>EDICIÓN #324 | FECHA: 06/11/2025</p>
     </header>
     
     <div class="card-container full-width">
         <div class="card resultados-dia">
             <h2>Resultados del día</h2>
             <div id="numeros-ganadores-display" class="numeros-ganadores">
-                <table class="resultados-dia-tabla">
-                    <thead>
-                        <tr id="tabla-header-sorteos">
-                            </tr>
-                    </thead>
-                    <tbody>
-                        <tr id="tabla-row-numeros">
-                            </tr>
-                    </tbody>
-                </table>
+                <p>No se han seleccionado números ganadores</p>
             </div>
         </div>
     </div>
@@ -38,19 +29,19 @@
         <div class="card estadistica ventas">
             <i class="fas fa-ticket-alt"></i>
             <div class="valor" id="ventas">0</div>
-            <h3>Ventas</h3>
+            <h3>Tickets Vendidos</h3>
         </div>
         
         <div class="card estadistica recaudado">
             <i class="fas fa-money-bill-wave"></i>
             <div class="valor" id="recaudado">0 BS</div>
-            <h3>Recaudado</h3>
+            <h3>Total Recaudado</h3>
         </div>
         
         <div class="card estadistica acumulado">
             <i class="fas fa-trophy"></i>
             <div class="valor" id="acumulado1">0 BS</div>
-            <h3>Acumulado</h3>
+            <h3>Acumulado (1er Lugar)</h3>
         </div>
         
         <div class="card estadistica repartir">
@@ -71,32 +62,29 @@
             <i class="fas fa-file-pdf"></i> Descargar Resultados en PDF
         </button>
     </div>
-
     <div class="filtro-container">
         <div class="filtro-input-wrapper">
             <i class="fas fa-search"></i>
             <input type="text" id="filtroParticipantes" class="filtro-input" placeholder="🔍 Buscar por Nombre o REFE...">
         </div>
     </div>
-
     <div class="card-container full-width">
+        
         <div class="card ranking">
             <h2>PARTICIPANTES Y JUGADAS</h2>
-            <div class="ranking">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>NRO</th>
-                            <th>PARTICIPANTES</th>
-                            <th>REFE</th>
-                            <th colspan="7">JUGADAS</th> 
-                            <th>ACIERTOS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ranking-body">
-                        </tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NRO</th>
+                        <th>PARTICIPANTES</th>
+                        <th>REFE</th>
+                        <th colspan="7">JUGADAS</th> 
+                        <th>ACIERTOS</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body">
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -107,6 +95,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
-
 </body>
 </html>
