@@ -82,7 +82,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 3. ESTADÍSTICAS Y NÚMEROS DESTACADOS                     */
+/* 3. ESTADÍSTICAS Y NÚMEROS DESTACADOS                      */
 /* ========================================================= */
 .estadistica i {
     font-size: 2em;
@@ -199,7 +199,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 6. TABLA DE RANKING / PARTICIPANTES                       */
+/* 6. TABLA DE RANKING / PARTICIPANTES                        */
 /* ========================================================= */
 .ranking {
     overflow-x: auto;
@@ -348,7 +348,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 9. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS)                 */
+/* 9. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS ACTUALIZADOS)      */
 /* ========================================================= */
 .admin-section {
     background-color: white;
@@ -404,13 +404,56 @@ form button:hover {
 
 #lista-participantes li, #lista-resultados li {
     background-color: #f5f5f5;
-    padding: 12px;
-    border-radius: 6px;
+    padding: 15px;
+    border-radius: 8px;
     margin-bottom: 10px;
     border-left: 5px solid #fdd835;
     font-size: 0.9em;
     color: #333;
     font-weight: 600;
+    /* AJUSTE PARA BOTONES DE EDICIÓN */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* NUEVOS ESTILOS PARA EDICIÓN Y NOTAS ADMIN */
+.btn-editar, .btn-eliminar {
+    padding: 6px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    margin-left: 5px;
+    transition: 0.2s;
+}
+
+.btn-editar {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.btn-editar:hover {
+    background-color: #e0a800;
+}
+
+.btn-eliminar {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-eliminar:hover {
+    background-color: #c82333;
+}
+
+.admin-nota-aviso {
+    display: block;
+    color: #d32f2f;
+    font-size: 0.8em;
+    font-weight: 700;
+    margin-top: 5px;
+    font-style: italic;
 }
 
 /* ========================================================= */
@@ -457,10 +500,16 @@ footer {
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+    #lista-participantes li, #lista-resultados li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 }
 
 /* ========================================================= */
-/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)               */
+/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)                */
 /* ========================================================= */
 .ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
     font-family: 'Arial Black', sans-serif; /* Fuente más gruesa para destacar la O */

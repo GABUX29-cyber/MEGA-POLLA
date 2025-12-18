@@ -17,21 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let numeros = numerosRaw.map(n => {
             let num = n.trim().padStart(2, '0');
             if (num === "00") return "00";
-            if (parseInt(num) === 0) return "O"; // Regla de la letra O
+            if (parseInt(num) === 0) return "O"; 
             return num;
         });
 
         let avisos = [];
 
-        // Regla: Máximo 7 números (elimina el sobrante si hay 8)
+        // Regla: Máximo 7 números (elimina el sobrante)
         if (numeros.length > JUGADA_SIZE) {
             let eliminado = numeros.pop();
-            avisos.push(`Se eliminó el número sobrante (${eliminado}).`);
+            avisos.push(`Se eliminó el sobrante (${eliminado})`);
         }
 
         // Validación: Mínimo 7 números
         if (numeros.length < JUGADA_SIZE) {
-            alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números. Se requiere 7.`);
+            alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números.`);
             return null;
         }
 
@@ -51,18 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!numeros.includes("36")) {
                 let index = numeros.lastIndexOf(duplicado);
                 numeros[index] = "36";
-                avisos.push(`Duplicado (${duplicado}) reemplazado por 36.`);
+                avisos.push(`Duplicado (${duplicado}) reemplazado por 36`);
             } else {
-                alert(`🚫 JUGADA NULA (${nombreParticipante}): Tiene duplicado (${duplicado}) y el 36 ya existe.`);
+                alert(`🚫 JUGADA NULA (${nombreParticipante}): Duplicado (${duplicado}) y el 36 ya existe.`);
                 return null;
             }
         }
 
-        if (avisos.length > 0) {
-            alert(`📝 CORRECCIONES EN ${nombreParticipante}:\n${avisos.join('\n')}`);
-        }
-
-        return numeros;
+        // Retornamos los números y el string de avisos (si existen)
+        return { 
+            numeros: numeros, 
+            nota: avisos.length > 0 ? `📝 Auto-corrección: ${avisos.join('. ')}` : "" 
+        };
     }
 
     // ---------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function cargarDatosDesdeNube() {
         try {
             const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
-            const { data: r } = await _supabase.from('resultados').select('*');
+            const { data: r } = await _supabase.from('resultados').select('*').order('id', { ascending: false });
             const { data: f } = await _supabase.from('finanzas').select('*').single();
 
             if (p) participantes = p;
@@ -84,29 +84,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function actualizarFinanzasNube() {
-        const { error } = await _supabase.from('finanzas').update(finanzas).eq('id', 1);
-        if (error) alert("Error al actualizar finanzas");
-        else {
-            alert("✅ Finanzas actualizadas.");
+    // ---------------------------------------------------------------------------------------
+    // --- 3. FUNCIONES DE EDICIÓN ---
+    // ---------------------------------------------------------------------------------------
+    
+    // Editar Resultados ya publicados
+    window.editarResultadoNube = async (id, sorteoActual, numeroActual) => {
+        const nuevoNumeroRaw = prompt(`Editar resultado para ${sorteoActual}:`, numeroActual);
+        if (nuevoNumeroRaw === null || nuevoNumeroRaw.trim() === "") return;
+
+        let numFinal = (nuevoNumeroRaw === "0" || (parseInt(nuevoNumeroRaw) === 0 && nuevoNumeroRaw !== "00")) ? "O" : nuevoNumeroRaw.trim().padStart(2, '0');
+
+        const { error } = await _supabase
+            .from('resultados')
+            .update({ numero: numFinal })
+            .eq('id', id);
+
+        if (error) alert("Error al editar resultado");
+        else cargarDatosDesdeNube();
+    };
+
+    // Editar Participante y registrar nota de cambio
+    window.editarParticipanteNube = async (id, nombreAct, refeAct, jugadasAct) => {
+        const nuevoNombre = prompt("Nombre:", nombreAct);
+        if (nuevoNombre === null) return;
+        const nuevasJugadasStr = prompt("Jugadas (separadas por coma):", jugadasAct);
+        if (nuevasJugadasStr === null) return;
+        const motivo = prompt("Motivo de la edición (ej: Error en REFE):", "Manual");
+
+        const notaEdicion = `⚠️ Editado: ${motivo}`;
+
+        const { error } = await _supabase
+            .from('participantes')
+            .update({ 
+                nombre: nuevoNombre, 
+                jugadas: nuevasJugadasStr.split(','),
+                notas_correccion: notaEdicion 
+            })
+            .eq('id', id);
+
+        if (error) alert("Error al editar participante");
+        else cargarDatosDesdeNube();
+    };
+
+    window.eliminarParticipanteNube = async (id) => {
+        if (confirm("¿Eliminar definitivamente a este participante?")) {
+            await _supabase.from('participantes').delete().eq('id', id);
             cargarDatosDesdeNube();
         }
-    }
+    };
 
     // ---------------------------------------------------------------------------------------
-    // --- 3. GESTIÓN DE FORMULARIOS ---
+    // --- 4. GESTIÓN DE FORMULARIOS ---
     // ---------------------------------------------------------------------------------------
 
-    // Formulario de Finanzas
-    document.getElementById('form-finanzas').addEventListener('submit', (e) => {
+    document.getElementById('form-finanzas').addEventListener('submit', async (e) => {
         e.preventDefault();
         finanzas.ventas = parseInt(document.getElementById('input-ventas').value);
         finanzas.recaudado = parseFloat(document.getElementById('input-recaudado').value);
         finanzas.acumulado1 = parseFloat(document.getElementById('input-acumulado').value);
-        actualizarFinanzasNube();
+        
+        const { error } = await _supabase.from('finanzas').update(finanzas).eq('id', 1);
+        if (error) alert("Error al actualizar finanzas");
+        else { alert("✅ Finanzas actualizadas."); cargarDatosDesdeNube(); }
     });
 
-    // Formulario de Resultados
     document.getElementById('form-resultados').addEventListener('submit', async (e) => {
         e.preventDefault();
         let numRaw = document.getElementById('numero-ganador').value.trim();
@@ -120,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!error) { e.target.reset(); cargarDatosDesdeNube(); }
     });
 
-    // Procesar Pegado de Datos
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
@@ -128,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let nombre = "Sin Nombre", refe = "";
 
         lineas.forEach(linea => {
-            // Captura grupos de números (ahora más flexible)
             const matches = linea.match(/\b\d{1,2}\b/g);
             if (matches && matches.length >= 5) {
                 numerosEncontrados.push(matches.join(','));
@@ -144,67 +184,51 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
     });
 
-    // --- REGISTRO SECUENCIAL CORREGIDO (NUMERACIÓN Y SEPARADORES) ---
     document.getElementById('form-participante').addEventListener('submit', async (e) => {
         e.preventDefault();
         const nombreBase = document.getElementById('nombre').value.trim();
         const refe = document.getElementById('refe').value.trim();
-        // Separamos las múltiples jugadas por el caracter '|'
         const jugadasRaw = document.getElementById('jugadas-procesadas').value.split('|').map(s => s.trim()).filter(s => s !== "");
 
         if (!refe) return alert("El REFE es obligatorio");
 
-        // Bucle for...of con await para que sea 100% secuencial
         for (let jugadaStr of jugadasRaw) {
-            // Acepta comas (,) o barras (/) como separador de números
             let numSucios = jugadaStr.split(/[,/]/).map(n => n.trim()).filter(n => n !== "");
-            let jugadaLimpia = procesarYValidarJugada(numSucios, nombreBase);
+            let procesado = procesarYValidarJugada(numSucios, nombreBase);
 
-            if (jugadaLimpia) {
-                // Consultamos el conteo exacto a la nube antes de cada inserción
-                const { count } = await _supabase
-                    .from('participantes')
-                    .select('*', { count: 'exact', head: true });
-
+            if (procesado) {
+                const { count } = await _supabase.from('participantes').select('*', { count: 'exact', head: true });
                 const proximoNro = (count || 0) + 1;
 
                 const nuevaJugada = {
                     nro: proximoNro,
                     nombre: nombreBase,
                     refe: refe,
-                    jugadas: jugadaLimpia 
+                    jugadas: procesado.numeros,
+                    notas_correccion: procesado.nota // Aquí se guarda el aviso automático
                 };
 
-                const { error } = await _supabase.from('participantes').insert([nuevaJugada]);
-                
-                if (error) {
-                    console.error("Error al guardar jugada:", error);
-                }
+                await _supabase.from('participantes').insert([nuevaJugada]);
             }
         }
-
-        alert("✅ Todas las jugadas registradas con números correlativos.");
         e.target.reset();
-        document.getElementById('input-paste-data').value = "";
         cargarDatosDesdeNube(); 
     });
 
     // ---------------------------------------------------------------------------------------
-    // --- 4. RENDERIZADO ---
+    // --- 5. RENDERIZADO ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
-        if (finanzas) {
-            document.getElementById('input-ventas').value = finanzas.ventas;
-            document.getElementById('input-recaudado').value = finanzas.recaudado;
-            document.getElementById('input-acumulado').value = finanzas.acumulado1;
-        }
-
         const listaRes = document.getElementById('lista-resultados');
         listaRes.innerHTML = '';
         resultados.forEach((res) => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${res.sorteo}: <strong>${res.numero}</strong></span> 
-                           <button class="btn-eliminar" onclick="eliminarResultadoNube(${res.id})">Eliminar</button>`;
+            li.innerHTML = `
+                <span>${res.sorteo}: <strong>${res.numero}</strong></span> 
+                <div>
+                    <button class="btn-editar" onclick="editarResultadoNube(${res.id}, '${res.sorteo}', '${res.numero}')">Editar</button>
+                    <button class="btn-eliminar" onclick="eliminarResultadoNube(${res.id})">Eliminar</button>
+                </div>`;
             listaRes.appendChild(li);
         });
 
@@ -212,7 +236,17 @@ document.addEventListener('DOMContentLoaded', () => {
         listaPart.innerHTML = '';
         participantes.forEach(p => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>#${p.nro} - ${p.nombre} (${p.refe}) - [${p.jugadas.join(', ')}]</span>`;
+            const aviso = p.notas_correccion ? `<div style="color:red; font-size:0.8em;">${p.notas_correccion}</div>` : "";
+            li.innerHTML = `
+                <div style="flex-grow:1;">
+                    <strong>#${p.nro} - ${p.nombre}</strong> (${p.refe}) <br>
+                    <small>${p.jugadas.join(', ')}</small>
+                    ${aviso}
+                </div>
+                <div>
+                    <button class="btn-editar" onclick="editarParticipanteNube(${p.id}, '${p.nombre}', '${p.refe}', '${p.jugadas}')">✏️</button>
+                    <button class="btn-eliminar" onclick="eliminarParticipanteNube(${p.id})">🗑️</button>
+                </div>`;
             listaPart.appendChild(li);
         });
     }
@@ -223,17 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarDatosDesdeNube();
         }
     };
-
-    document.getElementById('btn-reiniciar-datos').addEventListener('click', async () => {
-        const clave = prompt("Clave de seguridad para borrar TODO:");
-        if (CLAVES_VALIDAS.includes(clave)) {
-            if (confirm("¿Borrar toda la base de datos de participantes y resultados?")) {
-                await _supabase.from('participantes').delete().neq('id', 0);
-                await _supabase.from('resultados').delete().neq('id', 0);
-                cargarDatosDesdeNube();
-            }
-        }
-    });
 
     // Bloqueo Inicial
     const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
