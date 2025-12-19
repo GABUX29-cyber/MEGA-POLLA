@@ -184,7 +184,7 @@
                 <strong>Opción Rápida:</strong> Pega el mensaje de WhatsApp aquí.
             </label>
             <textarea id="input-paste-data" placeholder="Pega aquí el texto..."></textarea>
-            <button type="button" id="btn-procesar-pegado">Procesar Texto</button>
+            <button type="button" id="btn-procesar-pegado">Procesar Texto al Recuadro</button>
         </div>
         
         <form id="form-participante" style="margin-top: 20px;">
@@ -194,8 +194,10 @@
             <label for="refe">Código REFE:</label>
             <input type="number" id="refe" required>
             
-            <label>Jugadas Procesadas:</label>
-            <input type="text" id="jugadas-procesadas" placeholder="01,02... | 10,11..." required>
+            <label>Jugadas Procesadas (Revise antes de registrar):</label>
+            <input type="text" id="jugadas-procesadas" 
+                   style="background-color: #fffde7; border: 2px solid #fdd835; font-weight: bold;" 
+                   placeholder="01,02... | 10,11..." required>
             
             <input type="hidden" id="notas-correccion" value=""> 
 

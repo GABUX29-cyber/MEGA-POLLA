@@ -182,6 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('nombre').value = nombre;
         document.getElementById('refe').value = refe;
         document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
+
+        // --- EL RECUADRO DE AVISO QUE SOLICITASTE ---
+        alert("✅ DATOS PROCESADOS AL RECUADRO\n\nPor favor, revisa el Nombre, el REFE y las Jugadas antes de presionar el botón de Registrar.");
     });
 
     document.getElementById('form-participante').addEventListener('submit', async (e) => {
@@ -212,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         e.target.reset();
+        document.getElementById('input-paste-data').value = ""; // Limpia también el área de pegado
         cargarDatosDesdeNube(); 
     });
 

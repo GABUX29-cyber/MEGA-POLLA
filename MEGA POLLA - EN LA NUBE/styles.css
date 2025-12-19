@@ -1,5 +1,5 @@
 /* ========================================================= */
-/* 1. ESTILOS GENERALES Y LAYOUT BASE                        */
+/* 1. ESTILOS GENERALES Y LAYOUT BASE                         */
 /* ========================================================= */
 body {
     font-family: 'Montserrat', sans-serif;
@@ -48,7 +48,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 2. TARJETAS (CARDS) Y CONTENEDORES                        */
+/* 2. TARJETAS (CARDS) Y CONTENEDORES                         */
 /* ========================================================= */
 .card-container {
     display: grid;
@@ -361,6 +361,44 @@ tbody tr:hover {
     box-sizing: border-box;
 }
 
+/* --- ESTILOS PARA EL ÁREA DE PEGADO --- */
+#paste-section {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+#paste-section textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+    resize: vertical;
+}
+
+#btn-procesar-pegado {
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 700;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+#btn-procesar-pegado:hover {
+    background-color: #0056b3;
+}
+
+/* --- ESTILOS DE FORMULARIO ADMIN --- */
 form label {
     display: block;
     margin-bottom: 8px;
@@ -411,7 +449,6 @@ form button:hover {
     font-size: 0.9em;
     color: #333;
     font-weight: 600;
-    /* AJUSTE PARA BOTONES DE EDICIÓN */
     display: flex;
     justify-content: space-between;
     align-items: center;
