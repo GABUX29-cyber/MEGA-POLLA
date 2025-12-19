@@ -165,13 +165,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
-        let numerosEncontrados = [];
+        let jugadasFinales = [];
         let nombre = "Sin Nombre", refe = "";
 
         lineas.forEach(linea => {
             const matches = linea.match(/\b\d{1,2}\b/g);
+            
+            // CAMBIO: Si encuentra números, los segmenta cada 7 elementos
             if (matches && matches.length >= 5) {
-                numerosEncontrados.push(matches.join(','));
+                for (let i = 0; i < matches.length; i += JUGADA_SIZE) {
+                    let grupo = matches.slice(i, i + JUGADA_SIZE);
+                    // Solo añade si el grupo tiene un tamaño razonable (mínimo 5) para evitar basura
+                    if (grupo.length >= 5) {
+                        jugadasFinales.push(grupo.join(','));
+                    }
+                }
             } else if (linea.toLowerCase().includes("refe") || linea.toLowerCase().includes("identificación")) {
                 refe = linea.replace(/\D/g, "");
             } else if (linea.length > 3 && !refe) {
@@ -181,7 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('nombre').value = nombre;
         document.getElementById('refe').value = refe;
-        document.getElementById('jugadas-procesadas').value = numerosEncontrados.join(' | ');
+        // Une los grupos segmentados con " | "
+        document.getElementById('jugadas-procesadas').value = jugadasFinales.join(' | ');
 
         // --- EL RECUADRO DE AVISO QUE SOLICITASTE ---
         alert("✅ DATOS PROCESADOS AL RECUADRO\n\nPor favor, revisa el Nombre, el REFE y las Jugadas antes de presionar el botón de Registrar.");
