@@ -22,11 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let avisos = [];
+        let avisosAlert = [];
 
         // Regla: Máximo 7 números (elimina el sobrante)
         if (numeros.length > JUGADA_SIZE) {
-            let eliminado = numeros.pop();
-            avisos.push(`Se eliminó el sobrante (${eliminado})`);
+            let eliminados = [];
+            while (numeros.length > JUGADA_SIZE) {
+                eliminados.push(numeros.pop());
+            }
+            let msg = `Se eliminó el sobrante (${eliminados.join(', ')})`;
+            avisos.push(msg);
+            avisosAlert.push(`⚠️ ${msg}`);
         }
 
         // Validación: Mínimo 7 números
@@ -37,28 +43,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Gestión de Duplicados
         let counts = {};
-        let duplicado = null;
+        let duplicadosEncontrados = [];
         numeros.forEach(n => counts[n] = (counts[n] || 0) + 1);
         
         for (let n in counts) {
             if (counts[n] > 1) {
-                duplicado = n;
-                break;
+                duplicadosEncontrados.push(n);
             }
         }
 
-        if (duplicado) {
-            if (!numeros.includes("36")) {
-                let index = numeros.lastIndexOf(duplicado);
-                numeros[index] = "36";
-                avisos.push(`Duplicado (${duplicado}) reemplazado por 36`);
-            } else {
-                alert(`🚫 JUGADA NULA (${nombreParticipante}): Duplicado (${duplicado}) y el 36 ya existe.`);
+        if (duplicadosEncontrados.length > 0) {
+            let sePudoCorregir = true;
+            duplicadosEncontrados.forEach(dup => {
+                if (!numeros.includes("36")) {
+                    let index = numeros.lastIndexOf(dup);
+                    numeros[index] = "36";
+                    let msg = `Duplicado (${dup}) reemplazado por 36`;
+                    avisos.push(msg);
+                    avisosAlert.push(`🔄 ${msg}`);
+                } else {
+                    sePudoCorregir = false;
+                }
+            });
+
+            if (!sePudoCorregir) {
+                alert(`🚫 JUGADA NULA (${nombreParticipante}): Hay duplicados (${duplicadosEncontrados.join(', ')}) y el 36 ya existe.`);
                 return null;
             }
         }
 
-        // Retornamos los números y el string de avisos (si existen)
+        // Si hubo cambios, avisar al administrador antes de registrar
+        if (avisosAlert.length > 0) {
+            alert(`📝 CAMBIOS AUTOMÁTICOS EN ${nombreParticipante}:\n\n${avisosAlert.join('\n')}`);
+        }
+
         return { 
             numeros: numeros, 
             nota: avisos.length > 0 ? `📝 Auto-corrección: ${avisos.join('. ')}` : "" 
