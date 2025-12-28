@@ -96,6 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r) resultados = r;
             if (f) finanzas = f;
 
+            // --- SINCRONIZACIÓN AUTOMÁTICA HACIA LA NUBE ---
+            // Si hay participantes cargados y la cantidad es distinta a la guardada en 'finanzas'
+            if (p && f && p.length !== f.ventas) {
+                await _supabase.from('finanzas').update({ ventas: p.length }).eq('id', 1);
+                // Actualizamos el objeto local para que el render coincida
+                finanzas.ventas = p.length;
+            }
+
             renderizarTodo();
         } catch (error) {
             console.error("Error al cargar datos:", error);
@@ -250,10 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. RENDERIZADO ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
-        // ACTUALIZACIÓN DE VENTAS AUTOMÁTICA (PERO EDITABLE)
+        // Mostramos el conteo actual en el input de ventas (Editable)
         const inputVentas = document.getElementById('input-ventas');
         if (inputVentas) {
-            // Se actualiza el valor con la cantidad de participantes actuales
             inputVentas.value = participantes.length;
         }
 
