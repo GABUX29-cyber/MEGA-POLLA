@@ -15,7 +15,7 @@ body {
 
 /* AJUSTE CRUCIAL: Forzar texto oscuro dentro de secciones/tarjetas blancas */
 .card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
-    color: #333;
+    color: #333; 
 }
 
 
@@ -226,6 +226,12 @@ tbody td {
     border-bottom: 1px solid #eee;
     color: #333;
     font-weight: 600;
+}
+
+tbody tr {
+    /* EVITA EL CORTE DE FILA EN LA IMPRESIÓN */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
 }
 
 tbody tr:nth-child(even) {
@@ -555,7 +561,7 @@ footer {
 }
 
 /* ========================================================= */
-/* 13. ESTILOS DE IMPRESIÓN (PDF) - CORRECCIÓN DEFINITIVA    */
+/* 13. ESTILOS DE IMPRESIÓN (PDF)                            */
 /* ========================================================= */
 @media print {
     /* 1. OCULTA ELEMENTOS NO DESEADOS */
@@ -564,8 +570,7 @@ footer {
     footer, 
     .pdf-container,
     .btn-descargar,
-    button,
-    #input-buscar {
+    button {
         display: none !important;
     }
     
@@ -577,7 +582,6 @@ footer {
         print-color-adjust: exact !important;
         padding: 0;
         margin: 0;
-        display: block !important; /* Evita que el flexbox cause problemas de altura */
     }
 
     header {
@@ -585,7 +589,6 @@ footer {
         color: #333 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        max-width: 100% !important;
     }
 
     .card {
@@ -593,25 +596,15 @@ footer {
         color: #333 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        box-shadow: none !important;
-        width: 100% !important;
     }
 
-    /* 3. EVITA EL CORTE DE FILAS (SOLUCIÓN AL PROBLEMA DE LA IMAGEN) */
-    table {
-        page-break-inside: auto;
-    }
-
-    tr {
-        page-break-inside: avoid !important; /* Evita que la fila se parta en dos hojas */
+    /* 3. EVITA CORTES DE FILAS Y TABLAS */
+    tbody tr {
+        page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    td, th {
-        page-break-inside: avoid !important;
-    }
-
-    /* 4. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA AUTOMÁTICOS */
+    /* 4. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA */
     @page {
         margin: 0; 
     }
