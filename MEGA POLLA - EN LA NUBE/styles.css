@@ -559,45 +559,56 @@ footer {
 /* ========================================================= */
 @media print {
     /* 1. OCULTA ELEMENTOS NO DESEADOS */
-    #btn-descargar-pdf, .filtro-container, footer, .pdf-container {
+    #btn-descargar-pdf, 
+    .filtro-container, 
+    footer, 
+    .pdf-container,
+    .btn-descargar,
+    button {
         display: none !important;
     }
     
-    /* 2. FUERZA LA IMPRESIÓN DE FONDOS Y COLORES */
-    body, header, .card, .card-container, .card.ranking tbody tr {
-        -webkit-print-color-adjust: exact !important; 
-        color-adjust: exact !important;
-        color: #333 !important;
-    }
-    
+    /* 2. FUERZA LA APARIENCIA EXACTA DE LA WEB */
     body {
-        background-color: #f0f2f5 !important; 
+        background-color: #212121 !important; /* Mantiene tu fondo gris oscuro */
+        color: #eee !important; /* Mantiene tu texto claro */
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important;
         padding: 0;
         margin: 0;
     }
-    
-    /* 3. Asegura el ancho completo y mantiene el tamaño original */
-    .card-container, header {
-        max-width: 100%;
-        width: 100%;
-        margin-bottom: 15px; 
+
+    header {
+        background-color: #fdd835 !important;
+        color: #333 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
-    
-    /* 4. Ajustes Mínimos para evitar cortes en la tabla ancha */
-    .card.ranking table {
-        page-break-inside: auto;
-        width: 100%; 
-        font-size: 0.85em; 
+
+    .card {
+        background-color: #ffffff !important;
+        color: #333 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
-    
-    /* Reducir padding de las celdas para ahorrar espacio */
-    .card.ranking thead th, .card.ranking tbody td {
-        padding: 4px 1px;
+
+    /* 3. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA */
+    @page {
+        margin: 0; /* Esto ayuda a quitar la URL y la fecha automáticamente */
     }
-    
-    /* Prevenir cortes de filas */
-    .card.ranking tbody tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
+
+    /* 4. Asegura que las tablas y aciertos mantengan su color verde */
+    .ranking-box.hit {
+        background-color: #4caf50 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .aciertos-box {
+        background-color: #333 !important;
+        color: #fdd835 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 }
