@@ -153,10 +153,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        // Calcular aciertos para todos los participantes
         rankingCalculado = participantesData.map(p => {
             const numAciertos = calcularAciertos(p.jugadas, resultadosDelDia);
             return { ...p, aciertos: numAciertos };
         });
+
+        // ORDENAMIENTO: De mayor a menor acierto
+        rankingCalculado.sort((a, b) => b.aciertos - a.aciertos);
 
         const term = filtro.toLowerCase();
         const dataFiltrada = rankingCalculado.filter(p => 
