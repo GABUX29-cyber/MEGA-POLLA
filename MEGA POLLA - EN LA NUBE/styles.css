@@ -228,6 +228,12 @@ tbody td {
     font-weight: 600;
 }
 
+tbody tr {
+    /* EVITA EL CORTE DE FILA EN LA IMPRESIÓN */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
 tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
@@ -592,12 +598,18 @@ footer {
         print-color-adjust: exact !important;
     }
 
-    /* 3. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA */
-    @page {
-        margin: 0; /* Esto ayuda a quitar la URL y la fecha automáticamente */
+    /* 3. EVITA CORTES DE FILAS Y TABLAS */
+    tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 
-    /* 4. Asegura que las tablas y aciertos mantengan su color verde */
+    /* 4. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA */
+    @page {
+        margin: 0; 
+    }
+
+    /* 5. Asegura que las tablas y aciertos mantengan su color verde */
     .ranking-box.hit {
         background-color: #4caf50 !important;
         color: white !important;
