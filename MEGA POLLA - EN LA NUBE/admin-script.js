@@ -92,21 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: r } = await _supabase.from('resultados').select('*').order('id', { ascending: false });
             const { data: f } = await _supabase.from('finanzas').select('*').single();
 
-            if (p) {
-                participantes = p;
-                // Sincronización automática de ventas con la cantidad de participantes
-                finanzas.ventas = p.length;
-            }
+            if (p) participantes = p;
             if (r) resultados = r;
-            if (f) {
-                finanzas.recaudado = f.recaudado;
-                finanzas.acumulado1 = f.acumulado1;
-            }
-
-            // Actualizar ventas en la nube si hay discrepancia
-            if (f && f.ventas !== participantes.length) {
-                await _supabase.from('finanzas').update({ ventas: participantes.length }).eq('id', 1);
-            }
+            if (f) finanzas = f;
 
             renderizarTodo();
         } catch (error) {
@@ -170,14 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-finanzas').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // Las ventas se bloquean al conteo de participantes actual
-        finanzas.ventas = participantes.length;
+        finanzas.ventas = parseInt(document.getElementById('input-ventas').value);
         finanzas.recaudado = parseFloat(document.getElementById('input-recaudado').value);
         finanzas.acumulado1 = parseFloat(document.getElementById('input-acumulado').value);
         
         const { error } = await _supabase.from('finanzas').update(finanzas).eq('id', 1);
         if (error) alert("Error al actualizar finanzas");
-        else { alert(`✅ Finanzas actualizadas. Tickets: ${finanzas.ventas}`); cargarDatosDesdeNube(); }
+        else { alert("✅ Finanzas actualizadas."); cargarDatosDesdeNube(); }
     });
 
     document.getElementById('form-resultados').addEventListener('submit', async (e) => {
@@ -202,9 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
         lineas.forEach(linea => {
             const matches = linea.match(/\b\d{1,2}\b/g);
             
+            // CAMBIO: Si encuentra números, los segmenta cada 7 elementos
             if (matches && matches.length >= 5) {
                 for (let i = 0; i < matches.length; i += JUGADA_SIZE) {
                     let grupo = matches.slice(i, i + JUGADA_SIZE);
+                    // Solo añade si el grupo tiene un tamaño razonable (mínimo 5) para evitar basura
                     if (grupo.length >= 5) {
                         jugadasFinales.push(grupo.join(','));
                     }
@@ -218,8 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('nombre').value = nombre;
         document.getElementById('refe').value = refe;
+        // Une los grupos segmentados con " | "
         document.getElementById('jugadas-procesadas').value = jugadasFinales.join(' | ');
 
+        // --- EL RECUADRO DE AVISO QUE SOLICITASTE ---
         alert("✅ DATOS PROCESADOS AL RECUADRO\n\nPor favor, revisa el Nombre, el REFE y las Jugadas antes de presionar el botón de Registrar.");
     });
 
@@ -244,14 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     nombre: nombreBase,
                     refe: refe,
                     jugadas: procesado.numeros,
-                    notas_correccion: procesado.nota
+                    notas_correccion: procesado.nota // Aquí se guarda el aviso automático
                 };
 
                 await _supabase.from('participantes').insert([nuevaJugada]);
             }
         }
         e.target.reset();
-        document.getElementById('input-paste-data').value = "";
+        document.getElementById('input-paste-data').value = ""; // Limpia también el área de pegado
         cargarDatosDesdeNube(); 
     });
 
@@ -259,14 +250,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. RENDERIZADO ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
-        // Sincronizar el input de ventas con el conteo real y bloquearlo
+        // ACTUALIZACIÓN DE VENTAS AUTOMÁTICA (PERO EDITABLE)
         const inputVentas = document.getElementById('input-ventas');
         if (inputVentas) {
+            // Se actualiza el valor con la cantidad de participantes actuales
             inputVentas.value = participantes.length;
-            inputVentas.disabled = true;
-            inputVentas.style.backgroundColor = "#e9ecef";
-            inputVentas.style.cursor = "not-allowed";
         }
+
+        const inputRecaudado = document.getElementById('input-recaudado');
+        if (inputRecaudado) inputRecaudado.value = finanzas.recaudado;
+
+        const inputAcumulado = document.getElementById('input-acumulado');
+        if (inputAcumulado) inputAcumulado.value = finanzas.acumulado1;
 
         const listaRes = document.getElementById('lista-resultados');
         listaRes.innerHTML = '';
