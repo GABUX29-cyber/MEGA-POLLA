@@ -15,7 +15,7 @@ body {
 
 /* AJUSTE CRUCIAL: Forzar texto oscuro dentro de secciones/tarjetas blancas */
 .card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
-    color: #333; 
+    color: #333;
 }
 
 
@@ -70,6 +70,8 @@ header p {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     text-align: center;
     transition: transform 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .card h2 {
@@ -118,17 +120,18 @@ header p {
     width: 100%;
     overflow-x: auto;
     margin-top: 10px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .tabla-horarios {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    min-width: 100%; /* AJUSTE: Ocupa el 100% en lugar de un ancho fijo de 600px */
 }
 
 .tabla-horarios th, .tabla-horarios td {
     border: 1px solid #ddd;
-    padding: 8px 4px;
+    padding: 8px 2px; /* Reducción de padding lateral para móviles */
     text-align: center;
     font-size: 0.85em;
 }
@@ -549,6 +552,16 @@ footer {
         align-items: flex-start;
         gap: 10px;
     }
+
+    /* AJUSTE PARA EL CUADRO DE RESULTADOS EN MÓVIL */
+    .tabla-horarios {
+        font-size: 0.65em;
+    }
+
+    .col-ruleta {
+        padding-left: 5px !important;
+        font-size: 0.8em;
+    }
 }
 
 /* ========================================================= */
@@ -598,8 +611,8 @@ footer {
         print-color-adjust: exact !important;
     }
 
-    /* 3. EVITA CORTES DE FILAS Y TABLAS */
-    tbody tr {
+    /* 3. EVITA CORTES DE FILAS Y TABLAS (CORRECCIÓN IMAGEN) */
+    tbody tr, tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
