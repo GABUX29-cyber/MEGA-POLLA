@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let rankingCalculado = []; 
 
     // FUNCIÓN PARA FORMATEAR MONEDA (Punto en miles, coma en decimales)
+    // Ejemplo: 5700 -> 5.700,00 BS
     const formatearBS = (monto) => {
         return new Intl.NumberFormat('de-DE', {
             minimumFractionDigits: 2,
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
+                // Guardamos los resultados (Si es 0 viene como "O")
                 resultadosDelDia = r.map(res => String(res.numero));
             }
             if (f) {
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Funciones Lógicas de Cálculo
+    // PARTE 2: Funciones Lógicas
     // ----------------------------------------------------------------
 
     function calcularAciertos(jugadorJugadas, ganadores) {
@@ -94,35 +96,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         const casaEl = document.getElementById('monto-casa');
         const domingoEl = document.getElementById('monto-domingo');
 
-        const montoRecaudadoHoy = parseFloat(finanzasData.recaudado) || 0;
-        const montoAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
+        // Valores base de la base de datos
+        const valorRecaudado = parseFloat(finanzasData.recaudado) || 0;
+        const valorAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
 
-        const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
+        // LA SUMA TOTAL SOLICITADA PARA DISTRIBUCIÓN
+        const sumaTotalParaDividir = valorRecaudado + valorAcumuladoAnterior;
 
+        // Mostrar valores informativos en el panel
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
+        if (recaudadoEl) recaudadoEl.textContent = formatearBS(valorRecaudado);
+        if (acumuladoEl) acumuladoEl.textContent = formatearBS(valorAcumuladoAnterior);
         
-        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
-        if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
-        if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
-        
-        if (repartirEl) {
-            const premio = GRAN_TOTAL * 0.75;
-            repartirEl.textContent = formatearBS(premio);
-        }
+        // --- CÁLCULOS Y REPARTO POR PORCENTAJES SOBRE EL TOTAL ---
 
+        // 20% PARA LA CASA
         if (casaEl) {
-            const casa = GRAN_TOTAL * 0.20;
-            casaEl.textContent = formatearBS(casa);
+            const cuentaCasa = sumaTotalParaDividir * 0.20;
+            casaEl.textContent = formatearBS(cuentaCasa);
         }
 
+        // 5% PARA EL DOMINGO
         if (domingoEl) {
-            const domingo = GRAN_TOTAL * 0.05;
-            domingoEl.textContent = formatearBS(domingo);
+            const cuentaDomingo = sumaTotalParaDividir * 0.05;
+            domingoEl.textContent = formatearBS(cuentaDomingo);
+        }
+
+        // 75% PARA PREMIO A REPARTIR
+        if (repartirEl) {
+            const premio75 = sumaTotalParaDividir * 0.75;
+            repartirEl.textContent = formatearBS(premio75);
         }
     }
 
     // ----------------------------------------------------------------
-    // PARTE 3: Renderizado de Interfaz
+    // PARTE 3: Renderizado de Resultados en Tabla
     // ----------------------------------------------------------------
 
     function renderResultadosDia() {
@@ -177,16 +185,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.innerHTML = tablaHTML;
     }
 
+    // ----------------------------------------------------------------
+    // PARTE 4: Renderizado de Participantes y Ranking
+    // ----------------------------------------------------------------
+
     function renderRanking(filtro = "") {
         const tbody = document.getElementById('ranking-body');
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        // Calcular aciertos para todos los participantes
         rankingCalculado = participantesData.map(p => {
             const numAciertos = calcularAciertos(p.jugadas, resultadosDelDia);
             return { ...p, aciertos: numAciertos };
         });
 
+        // ORDENAMIENTO: De mayor a menor acierto
         rankingCalculado.sort((a, b) => b.aciertos - a.aciertos);
 
         const term = filtro.toLowerCase();
@@ -241,6 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // LÓGICA DE IMPRESIÓN PDF
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
@@ -248,5 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Cargar datos iniciales
     cargarDatosDesdeNube();
 });
