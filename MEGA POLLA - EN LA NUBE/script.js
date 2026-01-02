@@ -83,27 +83,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const acumuladoEl = document.getElementById('acumulado1');
         const repartirEl = document.getElementById('repartir75');
         
-        // --- NUEVOS ELEMENTOS PARA CASA Y DOMINGO ---
+        // ELEMENTOS NUEVOS
         const casaEl = document.getElementById('monto-casa');
         const domingoEl = document.getElementById('monto-domingo');
 
+        const totalRecaudado = finanzasData.recaudado || 0;
+
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        if (recaudadoEl) recaudadoEl.textContent = `${finanzasData.recaudado.toFixed(2)} BS`;
+        if (recaudadoEl) recaudadoEl.textContent = `${totalRecaudado.toFixed(2)} BS`;
         if (acumuladoEl) acumuladoEl.textContent = `${finanzasData.acumulado1.toFixed(2)} BS`;
         
+        // CALCULO DE PREMIO 75%
         if (repartirEl) {
-            const premio75 = finanzasData.recaudado * 0.75;
+            const premio75 = totalRecaudado * 0.75;
             repartirEl.textContent = `${premio75.toFixed(2)} BS`;
         }
 
-        // Cálculo de 20% Casa y 5% Domingo
+        // CALCULO AUTOMÁTICO CASA (20%)
         if (casaEl) {
-            const montoCasa = finanzasData.recaudado * 0.20;
-            casaEl.textContent = `${montoCasa.toFixed(2)} BS`;
+            const cuentaCasa = totalRecaudado * 0.20;
+            casaEl.textContent = `${cuentaCasa.toFixed(2)} BS`;
         }
+
+        // CALCULO AUTOMÁTICO DOMINGO (5%)
         if (domingoEl) {
-            const montoDomingo = finanzasData.recaudado * 0.05;
-            domingoEl.textContent = `${montoDomingo.toFixed(2)} BS`;
+            const cuentaDomingo = totalRecaudado * 0.05;
+            domingoEl.textContent = `${cuentaDomingo.toFixed(2)} BS`;
         }
     }
 
