@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const JUGADA_SIZE = 7; 
     let rankingCalculado = []; 
 
+    // FUNCIÓN PARA FORMATEAR MONEDA (Punto en miles, coma en decimales)
+    const formatearBS = (monto) => {
+        return new Intl.NumberFormat('de-DE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(monto) + " BS";
+    };
+
     function establecerFechaReal() {
         const headerP = document.querySelector('header p');
         if (headerP) {
@@ -34,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function cargarDatosDesdeNube() {
         try {
-            // Obtenemos los datos de las 3 tablas de Supabase
             const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
             const { data: r } = await _supabase.from('resultados').select('*');
             const { data: f } = await _supabase.from('finanzas').select('*').single();
@@ -42,14 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
-                // Guardamos los números ganadores para comparar
                 resultadosDelDia = r.map(res => String(res.numero));
             }
             if (f) {
                 finanzasData = f;
             }
 
-            // Una vez que tenemos los datos, inicializamos todo
             inicializarSistema();
         } catch (error) {
             console.error("Error cargando datos de Supabase:", error);
@@ -82,7 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function actualizarFinanzasYEstadisticas() {
-        // Seleccionamos los elementos del HTML (Panel Público)
         const ventasEl = document.getElementById('ventas');
         const recaudadoEl = document.getElementById('recaudado');
         const acumuladoEl = document.getElementById('acumulado1');
@@ -90,36 +94,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         const casaEl = document.getElementById('monto-casa');
         const domingoEl = document.getElementById('monto-domingo');
 
-        // 1. Extraemos los valores de la base de datos (asegurando que sean números)
         const montoRecaudadoHoy = parseFloat(finanzasData.recaudado) || 0;
         const montoAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
 
-        // 2. LA SUMA CLAVE: Recaudado + Acumulado
         const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
-        // 3. Mostramos los valores informativos
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        if (recaudadoEl) recaudadoEl.textContent = `${montoRecaudadoHoy.toFixed(2)} BS`;
-        if (acumuladoEl) acumuladoEl.textContent = `${montoAcumuladoAnterior.toFixed(2)} BS`;
         
-        // 4. APLICAMOS LA DIVISIÓN DE PORCENTAJES SOBRE EL GRAN TOTAL
+        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
+        if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
+        if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
         
-        // PREMIO A REPARTIR (75%)
         if (repartirEl) {
             const premio = GRAN_TOTAL * 0.75;
-            repartirEl.textContent = `${premio.toFixed(2)} BS`;
+            repartirEl.textContent = formatearBS(premio);
         }
 
-        // CASA (20%)
         if (casaEl) {
             const casa = GRAN_TOTAL * 0.20;
-            casaEl.textContent = `${casa.toFixed(2)} BS`;
+            casaEl.textContent = formatearBS(casa);
         }
 
-        // DOMINGO (5%)
         if (domingoEl) {
             const domingo = GRAN_TOTAL * 0.05;
-            domingoEl.textContent = `${domingo.toFixed(2)} BS`;
+            domingoEl.textContent = formatearBS(domingo);
         }
     }
 
@@ -243,7 +241,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // LÓGICA DE IMPRESIÓN
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
@@ -251,6 +248,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // EJECUCIÓN INICIAL
     cargarDatosDesdeNube();
 });
