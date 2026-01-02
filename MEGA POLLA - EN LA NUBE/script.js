@@ -82,37 +82,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         const recaudadoEl = document.getElementById('recaudado');
         const acumuladoEl = document.getElementById('acumulado1');
         const repartirEl = document.getElementById('repartir75');
-        
-        // ELEMENTOS NUEVOS
         const casaEl = document.getElementById('monto-casa');
         const domingoEl = document.getElementById('monto-domingo');
 
-        const totalRecaudado = finanzasData.recaudado || 0;
+        // Valores base de la base de datos
+        const valorRecaudado = parseFloat(finanzasData.recaudado) || 0;
+        const valorAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
 
+        // SUMA TOTAL PARA DISTRIBUCIÓN
+        const sumaTotalParaDividir = valorRecaudado + valorAcumuladoAnterior;
+
+        // Mostrar valores base en sus cuadros
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        if (recaudadoEl) recaudadoEl.textContent = `${totalRecaudado.toFixed(2)} BS`;
-        if (acumuladoEl) acumuladoEl.textContent = `${finanzasData.acumulado1.toFixed(2)} BS`;
+        if (recaudadoEl) recaudadoEl.textContent = `${valorRecaudado.toFixed(2)} BS`;
+        if (acumuladoEl) acumuladoEl.textContent = `${valorAcumuladoAnterior.toFixed(2)} BS`;
         
-        // CALCULO DE PREMIO 75%
+        // --- CÁLCULOS SOBRE LA SUMA TOTAL ---
+
+        // 75% PARA PREMIO
         if (repartirEl) {
-            const premio75 = totalRecaudado * 0.75;
+            const premio75 = sumaTotalParaDividir * 0.75;
             repartirEl.textContent = `${premio75.toFixed(2)} BS`;
         }
 
-        // CALCULO AUTOMÁTICO CASA (20%)
+        // 20% PARA LA CASA
         if (casaEl) {
-            const cuentaCasa = totalRecaudado * 0.20;
+            const cuentaCasa = sumaTotalParaDividir * 0.20;
             casaEl.textContent = `${cuentaCasa.toFixed(2)} BS`;
         }
 
-        // CALCULO AUTOMÁTICO DOMINGO (5%)
+        // 5% PARA EL DOMINGO
         if (domingoEl) {
-            const cuentaDomingo = totalRecaudado * 0.05;
+            const cuentaDomingo = sumaTotalParaDividir * 0.05;
             domingoEl.textContent = `${cuentaDomingo.toFixed(2)} BS`;
         }
     }
 
-    // --- NUEVA FUNCIÓN DE RESULTADOS EN CUADRÍCULA ---
+    // --- FUNCIÓN DE RESULTADOS EN CUADRÍCULA ---
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
@@ -125,7 +131,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const horas = ["8AM", "9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM", "6PM", "7PM"];
         const nombresRuletas = ["LOTTO ACTIVO", "GRANJITA", "SELVA PLUS"];
 
-        // Organizar datos en mapa [Ruleta][Hora]
         const mapaResultados = {};
         resultadosAdmin.forEach(res => {
             const partes = res.sorteo.split(' ');
@@ -138,7 +143,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             mapaResultados[nombreRuleta][hora] = res.numero;
         });
 
-        // Construcción de la tabla
         let tablaHTML = `
             <div class="tabla-resultados-wrapper">
                 <table class="tabla-horarios">
@@ -172,13 +176,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        // Calcular aciertos para todos los participantes
         rankingCalculado = participantesData.map(p => {
             const numAciertos = calcularAciertos(p.jugadas, resultadosDelDia);
             return { ...p, aciertos: numAciertos };
         });
 
-        // ORDENAMIENTO: De mayor a menor acierto
         rankingCalculado.sort((a, b) => b.aciertos - a.aciertos);
 
         const term = filtro.toLowerCase();
@@ -233,7 +235,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // LÓGICA DE IMPRESIÓN
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
