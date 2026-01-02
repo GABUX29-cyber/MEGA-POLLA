@@ -97,10 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (f) finanzas = f;
 
             // --- SINCRONIZACIÓN AUTOMÁTICA HACIA LA NUBE ---
-            // Si hay participantes cargados y la cantidad es distinta a la guardada en 'finanzas'
             if (p && f && p.length !== f.ventas) {
                 await _supabase.from('finanzas').update({ ventas: p.length }).eq('id', 1);
-                // Actualizamos el objeto local para que el render coincida
                 finanzas.ventas = p.length;
             }
 
@@ -114,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. FUNCIONES DE EDICIÓN ---
     // ---------------------------------------------------------------------------------------
     
-    // Editar Resultados ya publicados
     window.editarResultadoNube = async (id, sorteoActual, numeroActual) => {
         const nuevoNumeroRaw = prompt(`Editar resultado para ${sorteoActual}:`, numeroActual);
         if (nuevoNumeroRaw === null || nuevoNumeroRaw.trim() === "") return;
@@ -130,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else cargarDatosDesdeNube();
     };
 
-    // Editar Participante y registrar nota de cambio
     window.editarParticipanteNube = async (id, nombreAct, refeAct, jugadasAct) => {
         const nuevoNombre = prompt("Nombre:", nombreAct);
         if (nuevoNombre === null) return;
@@ -196,12 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lineas.forEach(linea => {
             const matches = linea.match(/\b\d{1,2}\b/g);
-            
-            // CAMBIO: Si encuentra números, los segmenta cada 7 elementos
             if (matches && matches.length >= 5) {
                 for (let i = 0; i < matches.length; i += JUGADA_SIZE) {
                     let grupo = matches.slice(i, i + JUGADA_SIZE);
-                    // Solo añade si el grupo tiene un tamaño razonable (mínimo 5) para evitar basura
                     if (grupo.length >= 5) {
                         jugadasFinales.push(grupo.join(','));
                     }
@@ -215,10 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('nombre').value = nombre;
         document.getElementById('refe').value = refe;
-        // Une los grupos segmentados con " | "
         document.getElementById('jugadas-procesadas').value = jugadasFinales.join(' | ');
 
-        // --- EL RECUADRO DE AVISO QUE SOLICITASTE ---
         alert("✅ DATOS PROCESADOS AL RECUADRO\n\nPor favor, revisa el Nombre, el REFE y las Jugadas antes de presionar el botón de Registrar.");
     });
 
@@ -243,14 +234,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     nombre: nombreBase,
                     refe: refe,
                     jugadas: procesado.numeros,
-                    notas_correccion: procesado.nota // Aquí se guarda el aviso automático
+                    notas_correccion: procesado.nota
                 };
 
                 await _supabase.from('participantes').insert([nuevaJugada]);
             }
         }
         e.target.reset();
-        document.getElementById('input-paste-data').value = ""; // Limpia también el área de pegado
+        document.getElementById('input-paste-data').value = ""; 
         cargarDatosDesdeNube(); 
     });
 
@@ -258,17 +249,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. RENDERIZADO ---
     // ---------------------------------------------------------------------------------------
     function renderizarTodo() {
-        // Mostramos el conteo actual en el input de ventas (Editable)
         const inputVentas = document.getElementById('input-ventas');
-        if (inputVentas) {
-            inputVentas.value = participantes.length;
-        }
+        if (inputVentas) inputVentas.value = participantes.length;
 
         const inputRecaudado = document.getElementById('input-recaudado');
         if (inputRecaudado) inputRecaudado.value = finanzas.recaudado;
 
         const inputAcumulado = document.getElementById('input-acumulado');
         if (inputAcumulado) inputAcumulado.value = finanzas.acumulado1;
+
+        // CÁLCULOS PARA VISTA PREVIA DEL ADMIN
+        const montoCasa = (finanzas.recaudado * 0.20).toFixed(2);
+        const montoDomingo = (finanzas.recaudado * 0.05).toFixed(2);
+        
+        const elCasa = document.getElementById('casa-valor');
+        if (elCasa) elCasa.textContent = `${montoCasa} BS`;
+
+        const elDomingo = document.getElementById('domingo-valor');
+        if (elDomingo) elDomingo.textContent = `${montoDomingo} BS`;
 
         const listaRes = document.getElementById('lista-resultados');
         listaRes.innerHTML = '';

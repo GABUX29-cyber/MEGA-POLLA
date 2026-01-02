@@ -82,6 +82,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const recaudadoEl = document.getElementById('recaudado');
         const acumuladoEl = document.getElementById('acumulado1');
         const repartirEl = document.getElementById('repartir75');
+        
+        // --- NUEVOS ELEMENTOS PARA CASA Y DOMINGO ---
+        const casaEl = document.getElementById('monto-casa');
+        const domingoEl = document.getElementById('monto-domingo');
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
         if (recaudadoEl) recaudadoEl.textContent = `${finanzasData.recaudado.toFixed(2)} BS`;
@@ -90,6 +94,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (repartirEl) {
             const premio75 = finanzasData.recaudado * 0.75;
             repartirEl.textContent = `${premio75.toFixed(2)} BS`;
+        }
+
+        // Cálculo de 20% Casa y 5% Domingo
+        if (casaEl) {
+            const montoCasa = finanzasData.recaudado * 0.20;
+            casaEl.textContent = `${montoCasa.toFixed(2)} BS`;
+        }
+        if (domingoEl) {
+            const montoDomingo = finanzasData.recaudado * 0.05;
+            domingoEl.textContent = `${montoDomingo.toFixed(2)} BS`;
         }
     }
 
