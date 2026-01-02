@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function cargarDatosDesdeNube() {
         try {
+            // Obtenemos los datos de las 3 tablas de Supabase
             const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
             const { data: r } = await _supabase.from('resultados').select('*');
             const { data: f } = await _supabase.from('finanzas').select('*').single();
@@ -41,11 +42,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
-                // Guardamos los resultados (Si es 0 viene como "O")
+                // Guardamos los números ganadores para comparar
                 resultadosDelDia = r.map(res => String(res.numero));
             }
-            if (f) finanzasData = f;
+            if (f) {
+                finanzasData = f;
+            }
 
+            // Una vez que tenemos los datos, inicializamos todo
             inicializarSistema();
         } catch (error) {
             console.error("Error cargando datos de Supabase:", error);
@@ -61,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----------------------------------------------------------------
-    // PARTE 2: Funciones Lógicas
+    // PARTE 2: Funciones Lógicas de Cálculo
     // ----------------------------------------------------------------
 
     function calcularAciertos(jugadorJugadas, ganadores) {
@@ -78,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function actualizarFinanzasYEstadisticas() {
+        // Seleccionamos los elementos del HTML (Panel Público)
         const ventasEl = document.getElementById('ventas');
         const recaudadoEl = document.getElementById('recaudado');
         const acumuladoEl = document.getElementById('acumulado1');
@@ -85,40 +90,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         const casaEl = document.getElementById('monto-casa');
         const domingoEl = document.getElementById('monto-domingo');
 
-        // Valores base de la base de datos
-        const valorRecaudado = parseFloat(finanzasData.recaudado) || 0;
-        const valorAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
+        // 1. Extraemos los valores de la base de datos (asegurando que sean números)
+        const montoRecaudadoHoy = parseFloat(finanzasData.recaudado) || 0;
+        const montoAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
 
-        // SUMA TOTAL PARA DISTRIBUCIÓN
-        const sumaTotalParaDividir = valorRecaudado + valorAcumuladoAnterior;
+        // 2. LA SUMA CLAVE: Recaudado + Acumulado
+        const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
-        // Mostrar valores base en sus cuadros
+        // 3. Mostramos los valores informativos
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        if (recaudadoEl) recaudadoEl.textContent = `${valorRecaudado.toFixed(2)} BS`;
-        if (acumuladoEl) acumuladoEl.textContent = `${valorAcumuladoAnterior.toFixed(2)} BS`;
+        if (recaudadoEl) recaudadoEl.textContent = `${montoRecaudadoHoy.toFixed(2)} BS`;
+        if (acumuladoEl) acumuladoEl.textContent = `${montoAcumuladoAnterior.toFixed(2)} BS`;
         
-        // --- CÁLCULOS SOBRE LA SUMA TOTAL ---
-
-        // 75% PARA PREMIO
+        // 4. APLICAMOS LA DIVISIÓN DE PORCENTAJES SOBRE EL GRAN TOTAL
+        
+        // PREMIO A REPARTIR (75%)
         if (repartirEl) {
-            const premio75 = sumaTotalParaDividir * 0.75;
-            repartirEl.textContent = `${premio75.toFixed(2)} BS`;
+            const premio = GRAN_TOTAL * 0.75;
+            repartirEl.textContent = `${premio.toFixed(2)} BS`;
         }
 
-        // 20% PARA LA CASA
+        // CASA (20%)
         if (casaEl) {
-            const cuentaCasa = sumaTotalParaDividir * 0.20;
-            casaEl.textContent = `${cuentaCasa.toFixed(2)} BS`;
+            const casa = GRAN_TOTAL * 0.20;
+            casaEl.textContent = `${casa.toFixed(2)} BS`;
         }
 
-        // 5% PARA EL DOMINGO
+        // DOMINGO (5%)
         if (domingoEl) {
-            const cuentaDomingo = sumaTotalParaDividir * 0.05;
-            domingoEl.textContent = `${cuentaDomingo.toFixed(2)} BS`;
+            const domingo = GRAN_TOTAL * 0.05;
+            domingoEl.textContent = `${domingo.toFixed(2)} BS`;
         }
     }
 
-    // --- FUNCIÓN DE RESULTADOS EN CUADRÍCULA ---
+    // ----------------------------------------------------------------
+    // PARTE 3: Renderizado de Interfaz
+    // ----------------------------------------------------------------
+
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
@@ -235,6 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // LÓGICA DE IMPRESIÓN
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
@@ -242,5 +251,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // EJECUCIÓN INICIAL
     cargarDatosDesdeNube();
 });
