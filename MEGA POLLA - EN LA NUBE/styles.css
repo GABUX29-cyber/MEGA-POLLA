@@ -126,7 +126,7 @@ header p {
 .tabla-horarios {
     width: 100%;
     border-collapse: collapse;
-    min-width: 100%; /* AJUSTE: Ocupa el 100% */
+    min-width: 100%; /* AJUSTE: Ocupa el 100% en lugar de un ancho fijo de 600px */
 }
 
 .tabla-horarios th, .tabla-horarios td {
@@ -357,7 +357,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 9. PANEL DE ADMINISTRACIÓN                                 */
+/* 9. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS ACTUALIZADOS)      */
 /* ========================================================= */
 .admin-section {
     background-color: white;
@@ -370,6 +370,7 @@ tbody tr:hover {
     box-sizing: border-box;
 }
 
+/* --- ESTILOS PARA EL ÁREA DE PEGADO --- */
 #paste-section {
     margin-top: 20px;
     border-top: 1px solid #eee;
@@ -406,6 +407,7 @@ tbody tr:hover {
     background-color: #0056b3;
 }
 
+/* --- ESTILOS DE FORMULARIO ADMIN --- */
 form label {
     display: block;
     margin-bottom: 8px;
@@ -461,6 +463,7 @@ form button:hover {
     align-items: center;
 }
 
+/* NUEVOS ESTILOS PARA EDICIÓN Y NOTAS ADMIN */
 .btn-editar, .btn-eliminar {
     padding: 6px 12px;
     border: none;
@@ -562,7 +565,7 @@ footer {
 }
 
 /* ========================================================= */
-/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)               */
+/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)                */
 /* ========================================================= */
 .ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
     font-family: 'Arial Black', sans-serif; /* Fuente más gruesa para destacar la O */
