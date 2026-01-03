@@ -8,10 +8,10 @@
     <style>
         /* --- ESTILOS DE BOTONES --- */
         .btn-editar, .btn-eliminar {
-            padding: 5px 10px;
+            padding: 8px 12px;
             border: none;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: bold;
             font-size: 0.85em;
             margin-left: 5px;
@@ -25,7 +25,7 @@
             color: white;
         }
         
-        /* --- ESTILOS DE LISTAS --- */
+        /* --- ESTILOS DE LISTAS ADAPTATIVAS --- */
         #lista-participantes li, #lista-resultados li {
             display: flex;
             justify-content: space-between;
@@ -37,6 +37,13 @@
             border-left: 5px solid #fdd835;
             color: #333;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-wrap: wrap; /* Crucial para móviles: permite que los botones bajen si no hay espacio */
+            gap: 10px;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 200px;
         }
 
         /* --- NOTAS DE CORRECCIÓN (SOLO ADMIN) --- */
@@ -56,13 +63,13 @@
             padding-top: 20px;
         }
         #paste-section textarea {
-            width: calc(100% - 20px);
+            width: 100%;
             min-height: 120px;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 0.95em;
+            border-radius: 8px;
+            font-size: 16px; /* Evita zoom automático en móviles */
             box-sizing: border-box;
             font-family: 'Montserrat', sans-serif;
             resize: vertical; 
@@ -70,27 +77,50 @@
         #paste-section button {
             background-color: #007bff;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 15px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
             width: 100%;
             transition: background-color 0.2s ease;
         }
-        #paste-section button:hover {
-            background-color: #0056b3;
-        }
 
         #input-buscar-participante {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
+            border-radius: 8px;
+            font-size: 16px;
             box-sizing: border-box; 
             margin-bottom: 15px;
+        }
+
+        /* --- MEDIA QUERIES PARA CELULARES --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .admin-section {
+                padding: 15px;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            header h1 {
+                font-size: 1.4em;
+            }
+            form label {
+                font-size: 0.9em;
+            }
+            .card-container {
+                grid-template-columns: 1fr !important; /* Cuadros financieros en 1 sola columna en móviles */
+            }
+            .btn-editar, .btn-eliminar {
+                flex: 1;
+                text-align: center;
+                margin: 0;
+            }
         }
     </style>
 </head>
@@ -117,13 +147,13 @@
         </form>
 
         <div class="card-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-            <div class="card" style="padding: 10px; border-radius: 8px; background: #f4f4f4; text-align: center;">
-                <div id="casa-valor" style="font-weight: bold; color: #607d8b;">0.00 BS</div>
-                <small style="text-transform: uppercase; font-size: 0.7em;">20% CASA</small>
+            <div class="card" style="padding: 15px; border-radius: 8px; background: #f4f4f4; text-align: center; border: 1px solid #ddd;">
+                <div id="casa-valor" style="font-weight: 800; color: #607d8b; font-size: 1.1em;">0.00 BS</div>
+                <small style="text-transform: uppercase; font-size: 0.7em; font-weight: bold;">20% CASA</small>
             </div>
-            <div class="card" style="padding: 10px; border-radius: 8px; background: #f4f4f4; text-align: center;">
-                <div id="domingo-valor" style="font-weight: bold; color: #e91e63;">0.00 BS</div>
-                <small style="text-transform: uppercase; font-size: 0.7em;">5% DIA DOMINGO</small>
+            <div class="card" style="padding: 15px; border-radius: 8px; background: #f4f4f4; text-align: center; border: 1px solid #ddd;">
+                <div id="domingo-valor" style="font-weight: 800; color: #e91e63; font-size: 1.1em;">0.00 BS</div>
+                <small style="text-transform: uppercase; font-size: 0.7em; font-weight: bold;">5% DIA DOMINGO</small>
             </div>
         </div>
     </div>
@@ -208,14 +238,14 @@
             <label>Jugadas Procesadas (Revise antes de registrar):</label>
             <input type="text" id="jugadas-procesadas" 
                    style="background-color: #fffde7; border: 2px solid #fdd835; font-weight: bold;" 
-                   placeholder="01,02... | 10,11..." required>
+                   placeholder="01, 02, 15, 30, 22, 05, 10" required>
             
             <input type="hidden" id="notas-correccion" value=""> 
 
             <button type="submit">Registrar Participante</button>
         </form>
         
-        <h3>Listado de Participantes:</h3>
+        <h3 style="margin-top: 20px;">Listado de Participantes:</h3>
         
         <input type="text" id="input-buscar-participante" placeholder="🔍 Buscar por Nombre o REFE...">
         
@@ -224,10 +254,11 @@
     
     <hr style="border-color: #fdd835; margin: 30px 0;">
 
-    <div style="text-align: center; margin-bottom: 20px;">
-        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">
+    <div style="text-align: center; margin-bottom: 40px; padding: 0 10px;">
+        <button id="btn-reiniciar-datos" style="background-color: #dc3545; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; max-width: 400px; font-weight: 800; font-size: 1.1em;">
             🔴 Reiniciar Partidas y Resultados
         </button>
+        <p style="color: #666; font-size: 0.85em; margin-top: 10px;">(Esta acción borrará todos los datos para iniciar un nuevo día)</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

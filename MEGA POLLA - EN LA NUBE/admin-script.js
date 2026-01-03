@@ -188,11 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawData = document.getElementById('input-paste-data').value;
         const lineas = rawData.split('\n').map(l => l.trim()).filter(l => l !== "");
         let jugadasFinales = [];
-        let nombre = "Sin Nombre", refe = "";
+        let nombre = "", refe = "";
 
         lineas.forEach(linea => {
+            // Extraer números de la jugada (busca grupos de dígitos independientes)
             const matches = linea.match(/\b\d{1,2}\b/g);
+            
             if (matches && matches.length >= 5) {
+                // Si la línea tiene muchos números, podría tener varias jugadas
                 for (let i = 0; i < matches.length; i += JUGADA_SIZE) {
                     let grupo = matches.slice(i, i + JUGADA_SIZE);
                     if (grupo.length >= 5) {
@@ -200,13 +203,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } else if (linea.toLowerCase().includes("refe") || linea.toLowerCase().includes("identificación")) {
+                // Extraer solo los números del REFE/Cédula
                 refe = linea.replace(/\D/g, "");
-            } else if (linea.length > 3 && !refe) {
-                nombre = linea.toUpperCase();
+            } else if (linea.length > 2 && !nombre && !linea.toLowerCase().includes("nro")) {
+                // El primer texto largo que no sea "nro" se asume como el nombre
+                nombre = linea.replace(/Nombre[:\- ]*/i, "").trim().toUpperCase();
             }
         });
 
-        document.getElementById('nombre').value = nombre;
+        document.getElementById('nombre').value = nombre || "Sin Nombre";
         document.getElementById('refe').value = refe;
         document.getElementById('jugadas-procesadas').value = jugadasFinales.join(' | ');
 
@@ -222,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!refe) return alert("El REFE es obligatorio");
 
         for (let jugadaStr of jugadasRaw) {
-            let numSucios = jugadaStr.split(/[,/]/).map(n => n.trim()).filter(n => n !== "");
+            let numSucios = jugadaStr.split(/[,/ ]/).map(n => n.trim()).filter(n => n !== "");
             let procesado = procesarYValidarJugada(numSucios, nombreBase);
 
             if (procesado) {
