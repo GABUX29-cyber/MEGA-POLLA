@@ -88,12 +88,12 @@ header p {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 columnas en escritorio */
-    gap: 10px;
+    gap: 12px;
     margin-top: 15px;
 }
 
-.stats-grid .estadistica {
-    padding: 12px 5px;
+.estadistica {
+    padding: 15px 5px;
     border-radius: 10px;
     background-color: #f9f9f9;
     border: 1px solid #eee;
@@ -104,25 +104,33 @@ header p {
 }
 
 .estadistica i {
-    font-size: 1.5em; /* Iconos un poco más pequeños para que quepan bien */
-    margin-bottom: 5px;
+    font-size: 1.8em;
+    margin-bottom: 8px;
     color: #fbc02d;
 }
 
 .valor {
-    font-size: 1.1em; /* Tamaño ajustado para que no se desborde en móvil */
+    font-size: 1.3em;
     font-weight: 800;
-    margin: 2px 0;
-    white-space: nowrap; /* Evita que el BS se baje a otra línea */
+    margin: 5px 0;
+    color: #333;
 }
 
 .estadistica h3 {
-    font-size: 0.65em; /* Texto de etiqueta pequeño como en la Imagen A */
+    font-size: 0.7em;
     text-transform: uppercase;
     color: #777;
     margin: 0;
     font-weight: 700;
-    line-height: 1;
+}
+
+/* Estilo especial para el cuadro de ganadores integrado */
+.ganadores-box-item {
+    background-color: #fffde7;
+    border: 1px solid #fdd835;
+}
+.ganadores-box-item .valor {
+    color: #f57c00;
 }
 
 /* Colores específicos para tipos de estadística */
@@ -130,7 +138,6 @@ header p {
 .recaudado .valor { color: #388e3c; }
 .acumulado .valor { color: #d32f2f; }
 .repartir .valor { color: #7b1fa2; }
-.ganadores .valor { color: #f57c00; }
 
 /* ========================================================= */
 /* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS)             */
@@ -527,18 +534,26 @@ footer {
 }
 
 /* ========================================================= */
-/* 11. MEDIA QUERIES (RESPONSIVE)                            */
+/* 11. MEDIA QUERIES (RESPONSIVE) - DISEÑO A COMPACTO        */
 /* ========================================================= */
-
 @media (max-width: 600px) {
-    /* CORRECCIÓN: Mantener 2 columnas en móvil para que se vea como la Imagen A */
+    /* MANTENER 2 COLUMNAS COMO EN LA IMAGEN A */
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important; 
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 8px;
     }
 
+    /* EL 7MO CUADRO (GANADORES) SE CENTRA OCUPANDO AMBAS COLUMNAS */
+    .ganadores-box-item {
+        grid-column: span 2;
+    }
+
     .valor {
-        font-size: 1em; /* Un poco más pequeño para celulares */
+        font-size: 1.1em;
+    }
+
+    .estadistica h3 {
+        font-size: 0.65em;
     }
 
     .card-container {
