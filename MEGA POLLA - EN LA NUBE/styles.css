@@ -88,35 +88,41 @@ header p {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 columnas en escritorio */
-    gap: 15px;
+    gap: 10px;
     margin-top: 15px;
 }
 
 .stats-grid .estadistica {
-    padding: 15px 5px;
+    padding: 12px 5px;
     border-radius: 10px;
     background-color: #f9f9f9;
     border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .estadistica i {
-    font-size: 2em;
-    margin-bottom: 10px;
+    font-size: 1.5em; /* Iconos un poco más pequeños para que quepan bien */
+    margin-bottom: 5px;
     color: #fbc02d;
 }
 
 .valor {
-    font-size: 1.5em; /* Un poco más pequeño para caber en la rejilla */
+    font-size: 1.1em; /* Tamaño ajustado para que no se desborde en móvil */
     font-weight: 800;
-    margin: 5px 0;
+    margin: 2px 0;
+    white-space: nowrap; /* Evita que el BS se baje a otra línea */
 }
 
 .estadistica h3 {
-    font-size: 0.75em;
+    font-size: 0.65em; /* Texto de etiqueta pequeño como en la Imagen A */
     text-transform: uppercase;
     color: #777;
     margin: 0;
     font-weight: 700;
+    line-height: 1;
 }
 
 /* Colores específicos para tipos de estadística */
@@ -523,23 +529,24 @@ footer {
 /* ========================================================= */
 /* 11. MEDIA QUERIES (RESPONSIVE)                            */
 /* ========================================================= */
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablets */
-    }
-}
 
 @media (max-width: 600px) {
+    /* CORRECCIÓN: Mantener 2 columnas en móvil para que se vea como la Imagen A */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 8px;
+    }
+
+    .valor {
+        font-size: 1em; /* Un poco más pequeño para celulares */
+    }
+
     .card-container {
         grid-template-columns: 1fr;
     }
     
-    .stats-grid {
-        grid-template-columns: 1fr; /* 1 columna en móviles pequeños */
-    }
-    
     h1 { font-size: 1.4em; }
-    .valor { font-size: 1.4em; }
+    
     .ranking table { font-size: 0.75em; }
     
     .ranking-box {
