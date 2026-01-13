@@ -18,7 +18,6 @@ body {
     color: #333;
 }
 
-
 header {
     text-align: center;
     margin-bottom: 25px;
@@ -84,8 +83,22 @@ header p {
 }
 
 /* ========================================================= */
-/* 3. ESTADÍSTICAS Y NÚMEROS DESTACADOS                      */
+/* 3. DISEÑO A: CUADRÍCULA DE ESTADÍSTICAS AGRUPADAS         */
 /* ========================================================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas en escritorio */
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stats-grid .estadistica {
+    padding: 15px 5px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+}
+
 .estadistica i {
     font-size: 2em;
     margin-bottom: 10px;
@@ -93,13 +106,13 @@ header p {
 }
 
 .valor {
-    font-size: 1.8em;
+    font-size: 1.5em; /* Un poco más pequeño para caber en la rejilla */
     font-weight: 800;
     margin: 5px 0;
 }
 
 .estadistica h3 {
-    font-size: 0.85em;
+    font-size: 0.75em;
     text-transform: uppercase;
     color: #777;
     margin: 0;
@@ -114,7 +127,7 @@ header p {
 .ganadores .valor { color: #f57c00; }
 
 /* ========================================================= */
-/* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS) - NUEVO     */
+/* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS)             */
 /* ========================================================= */
 .tabla-resultados-wrapper {
     width: 100%;
@@ -126,12 +139,12 @@ header p {
 .tabla-horarios {
     width: 100%;
     border-collapse: collapse;
-    min-width: 100%; /* AJUSTE: Ocupa el 100% en lugar de un ancho fijo de 600px */
+    min-width: 100%; 
 }
 
 .tabla-horarios th, .tabla-horarios td {
     border: 1px solid #ddd;
-    padding: 8px 2px; /* Reducción de padding lateral para móviles */
+    padding: 8px 2px;
     text-align: center;
     font-size: 0.85em;
 }
@@ -232,7 +245,6 @@ tbody td {
 }
 
 tbody tr {
-    /* EVITA EL CORTE DE FILA EN LA IMPRESIÓN */
     page-break-inside: avoid !important;
     break-inside: avoid !important;
 }
@@ -245,7 +257,6 @@ tbody tr:hover {
     background-color: #fffde7;
 }
 
-/* Cajas de números en la tabla */
 .ranking-box {
     display: inline-block;
     width: 28px;
@@ -259,7 +270,6 @@ tbody tr:hover {
     font-size: 0.85em;
 }
 
-/* Estilo cuando el número es un acierto (hit) */
 .ranking-box.hit {
     background-color: #4caf50;
     color: white;
@@ -357,7 +367,7 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 9. PANEL DE ADMINISTRACIÓN (ESPECÍFICOS ACTUALIZADOS)      */
+/* 9. PANEL DE ADMINISTRACIÓN                                 */
 /* ========================================================= */
 .admin-section {
     background-color: white;
@@ -370,7 +380,6 @@ tbody tr:hover {
     box-sizing: border-box;
 }
 
-/* --- ESTILOS PARA EL ÁREA DE PEGADO --- */
 #paste-section {
     margin-top: 20px;
     border-top: 1px solid #eee;
@@ -407,7 +416,6 @@ tbody tr:hover {
     background-color: #0056b3;
 }
 
-/* --- ESTILOS DE FORMULARIO ADMIN --- */
 form label {
     display: block;
     margin-bottom: 8px;
@@ -463,7 +471,6 @@ form button:hover {
     align-items: center;
 }
 
-/* NUEVOS ESTILOS PARA EDICIÓN Y NOTAS ADMIN */
 .btn-editar, .btn-eliminar {
     padding: 6px 12px;
     border: none;
@@ -516,22 +523,24 @@ footer {
 /* ========================================================= */
 /* 11. MEDIA QUERIES (RESPONSIVE)                            */
 /* ========================================================= */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablets */
+    }
+}
+
 @media (max-width: 600px) {
     .card-container {
         grid-template-columns: 1fr;
     }
     
-    h1 {
-        font-size: 1.4em;
+    .stats-grid {
+        grid-template-columns: 1fr; /* 1 columna en móviles pequeños */
     }
     
-    .valor {
-        font-size: 1.4em;
-    }
-    
-    .ranking table {
-        font-size: 0.75em;
-    }
+    h1 { font-size: 1.4em; }
+    .valor { font-size: 1.4em; }
+    .ranking table { font-size: 0.75em; }
     
     .ranking-box {
         width: 22px;
@@ -553,22 +562,15 @@ footer {
         gap: 10px;
     }
 
-    /* AJUSTE PARA EL CUADRO DE RESULTADOS EN MÓVIL */
-    .tabla-horarios {
-        font-size: 0.65em;
-    }
-
-    .col-ruleta {
-        padding-left: 5px !important;
-        font-size: 0.8em;
-    }
+    .tabla-horarios { font-size: 0.65em; }
+    .col-ruleta { padding-left: 5px !important; font-size: 0.8em; }
 }
 
 /* ========================================================= */
-/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)                */
+/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)               */
 /* ========================================================= */
 .ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
-    font-family: 'Arial Black', sans-serif; /* Fuente más gruesa para destacar la O */
+    font-family: 'Arial Black', sans-serif; 
     color: #fff;
     background-color: #2e7d32;
 }
@@ -577,7 +579,6 @@ footer {
 /* 13. ESTILOS DE IMPRESIÓN (PDF)                            */
 /* ========================================================= */
 @media print {
-    /* 1. OCULTA ELEMENTOS NO DESEADOS */
     #btn-descargar-pdf, 
     .filtro-container, 
     footer, 
@@ -587,10 +588,9 @@ footer {
         display: none !important;
     }
     
-    /* 2. FUERZA LA APARIENCIA EXACTA DE LA WEB */
     body {
-        background-color: #212121 !important; /* Mantiene tu fondo gris oscuro */
-        color: #eee !important; /* Mantiene tu texto claro */
+        background-color: #212121 !important;
+        color: #eee !important;
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important;
         padding: 0;
@@ -611,18 +611,13 @@ footer {
         print-color-adjust: exact !important;
     }
 
-    /* 3. EVITA CORTES DE FILAS Y TABLAS (CORRECCIÓN IMAGEN) */
     tbody tr, tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    /* 4. ELIMINA MÁRGENES PARA QUITAR ENCABEZADOS Y PIES DE PÁGINA */
-    @page {
-        margin: 0; 
-    }
+    @page { margin: 0; }
 
-    /* 5. Asegura que las tablas y aciertos mantengan su color verde */
     .ranking-box.hit {
         background-color: #4caf50 !important;
         color: white !important;
