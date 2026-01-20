@@ -3,8 +3,8 @@
 /* ========================================================= */
 body {
     font-family: 'Montserrat', sans-serif;
-    background-color: #212121; /* Fondo gris oscuro */
-    color: #eee; /* Texto general a gris claro para contraste */
+    background-color: #212121;
+    color: #eee;
     margin: 0;
     padding: 15px; 
     display: flex;
@@ -13,7 +13,6 @@ body {
     min-height: 100vh;
 }
 
-/* AJUSTE CRUCIAL: Forzar texto oscuro dentro de secciones/tarjetas blancas */
 .card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
     color: #333;
 }
@@ -27,7 +26,7 @@ header {
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 900px; /* Ancho máximo para el header y contenedores */
+    max-width: 900px;
     box-sizing: border-box;
 }
 
@@ -43,15 +42,14 @@ header p {
     margin: 5px 0 0;
     font-weight: 600;
     font-size: 0.9em;
-    opacity: 0.9;
 }
 
 /* ========================================================= */
-/* 2. TARJETAS (CARDS) Y CONTENEDORES                         */
+/* 2. CONTENEDORES Y TARJETAS                                 */
 /* ========================================================= */
 .card-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Dos columnas en escritorio */
+    grid-template-columns: 1fr;
     gap: 15px;
     width: 100%;
     max-width: 900px;
@@ -68,7 +66,6 @@ header p {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     text-align: center;
-    transition: transform 0.2s ease;
     width: 100%;
     box-sizing: border-box;
 }
@@ -83,61 +80,53 @@ header p {
 }
 
 /* ========================================================= */
-/* 3. DISEÑO A: CUADRÍCULA DE ESTADÍSTICAS AGRUPADAS         */
+/* 3. BLOQUE FINANCIERO ULTRA COMPACTO (Sustitución)          */
 /* ========================================================= */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas en escritorio */
-    gap: 12px;
-    margin-top: 15px;
+.compact-resumen {
+    padding: 10px !important;
 }
 
-.estadistica {
-    padding: 15px 5px;
-    border-radius: 10px;
-    background-color: #f9f9f9;
+.compact-resumen h2 {
+    font-size: 0.95em !important;
+    margin-bottom: 8px !important;
+}
+
+.stats-grid-ultra {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.est-mini {
+    background: #f9f9f9;
     border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 8px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-.estadistica i {
-    font-size: 1.8em;
-    margin-bottom: 8px;
-    color: #fbc02d;
-}
-
-.valor {
-    font-size: 1.3em;
+.val-mini {
+    font-size: 1.05em;
     font-weight: 800;
-    margin: 5px 0;
     color: #333;
 }
 
-.estadistica h3 {
-    font-size: 0.7em;
+.est-mini label {
+    font-size: 0.58em;
     text-transform: uppercase;
-    color: #777;
-    margin: 0;
     font-weight: 700;
+    color: #777;
+    margin-top: 2px;
 }
 
-/* Estilo especial para el cuadro de ganadores integrado */
-.ganadores-box-item {
+.ganadores-destacado {
     background-color: #fffde7;
     border: 1px solid #fdd835;
 }
-.ganadores-box-item .valor {
-    color: #f57c00;
-}
-
-/* Colores específicos para tipos de estadística */
-.ventas .valor { color: #1976d2; }
-.recaudado .valor { color: #388e3c; }
-.acumulado .valor { color: #d32f2f; }
-.repartir .valor { color: #7b1fa2; }
+.ganadores-destacado .val-mini { color: #e65100; }
 
 /* ========================================================= */
 /* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS)             */
@@ -534,26 +523,14 @@ footer {
 }
 
 /* ========================================================= */
-/* 11. MEDIA QUERIES (RESPONSIVE) - DISEÑO A COMPACTO        */
+/* 11. MEDIA QUERIES (RESPONSIVE)                             */
 /* ========================================================= */
 @media (max-width: 600px) {
-    /* MANTENER 2 COLUMNAS COMO EN LA IMAGEN A */
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px;
+    .stats-grid-ultra {
+        grid-template-columns: repeat(2, 1fr);
     }
-
-    /* EL 7MO CUADRO (GANADORES) SE CENTRA OCUPANDO AMBAS COLUMNAS */
-    .ganadores-box-item {
+    .ganadores-destacado {
         grid-column: span 2;
-    }
-
-    .valor {
-        font-size: 1.1em;
-    }
-
-    .estadistica h3 {
-        font-size: 0.65em;
     }
 
     .card-container {
@@ -589,7 +566,7 @@ footer {
 }
 
 /* ========================================================= */
-/* 12. ESTILOS PARA LA LETRA "O" (CERO COMO O)               */
+/* 12. ESTILOS PARA LA LETRA "O"                              */
 /* ========================================================= */
 .ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
     font-family: 'Arial Black', sans-serif; 
@@ -598,7 +575,7 @@ footer {
 }
 
 /* ========================================================= */
-/* 13. ESTILOS DE IMPRESIÓN (PDF)                            */
+/* 13. ESTILOS DE IMPRESIÓN (PDF)                             */
 /* ========================================================= */
 @media print {
     #btn-descargar-pdf, 
@@ -611,10 +588,8 @@ footer {
     }
     
     body {
-        background-color: #212121 !important;
-        color: #eee !important;
-        -webkit-print-color-adjust: exact !important; 
-        print-color-adjust: exact !important;
+        background-color: white !important;
+        color: black !important;
         padding: 0;
         margin: 0;
     }
@@ -622,35 +597,34 @@ footer {
     header {
         background-color: #fdd835 !important;
         color: #333 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        border: 1px solid #000;
     }
 
     .card {
-        background-color: #ffffff !important;
-        color: #333 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
     }
+
+    /* REDUCCIÓN DE RESUMEN AL IMPRIMIR A UNA FILA */
+    .stats-grid-ultra {
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 2px !important;
+    }
+
+    .est-mini {
+        border: 1px solid #999 !important;
+        padding: 4px 2px !important;
+        background: white !important;
+    }
+
+    .val-mini { font-size: 0.82em !important; }
+    .est-mini label { font-size: 0.52em !important; }
 
     tbody tr, tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    @page { margin: 0; }
-
-    .ranking-box.hit {
-        background-color: #4caf50 !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    .aciertos-box {
-        background-color: #333 !important;
-        color: #fdd835 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
+    @page { margin: 0.5cm; }
 }
