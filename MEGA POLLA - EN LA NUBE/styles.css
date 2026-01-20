@@ -3,8 +3,8 @@
 /* ========================================================= */
 body {
     font-family: 'Montserrat', sans-serif;
-    background-color: #212121;
-    color: #eee;
+    background-color: #212121; /* Fondo gris oscuro */
+    color: #eee; /* Texto general a gris claro para contraste */
     margin: 0;
     padding: 15px; 
     display: flex;
@@ -13,6 +13,7 @@ body {
     min-height: 100vh;
 }
 
+/* AJUSTE CRUCIAL: Forzar texto oscuro dentro de secciones/tarjetas blancas */
 .card, .admin-section, .card h2, .admin-section h2, .admin-section h3 {
     color: #333;
 }
@@ -26,7 +27,7 @@ header {
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 900px;
+    max-width: 900px; /* Ancho máximo para el header y contenedores */
     box-sizing: border-box;
 }
 
@@ -45,7 +46,84 @@ header p {
 }
 
 /* ========================================================= */
-/* 2. CONTENEDORES Y TARJETAS                                 */
+/* 2. ÁREA FINANCIERA ULTRA COMPACTA (CON COLORES Y EMOJIS)   */
+/* ========================================================= */
+.compact-resumen {
+    padding: 8px !important;
+}
+
+.compact-resumen h2 {
+    font-size: 0.9em !important;
+    margin-bottom: 8px !important;
+    border-bottom: 2px solid #fdd835;
+    padding-bottom: 3px;
+    display: inline-block;
+}
+
+.stats-grid-ultra {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+}
+
+.est-mini {
+    border-radius: 6px;
+    padding: 6px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0,0,0,0.1);
+    min-height: 60px;
+}
+
+.est-mini i {
+    font-size: 0.9em;
+    margin-bottom: 3px;
+}
+
+.val-mini {
+    font-size: 0.9em;
+    font-weight: 800;
+    color: #333;
+    line-height: 1;
+}
+
+.est-mini label {
+    font-size: 0.52em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #444;
+    margin-top: 3px;
+    text-align: center;
+    width: 95%;
+    white-space: normal; /* Asegura que el texto no se corte y baje */
+}
+
+/* Restauración de colores originales */
+.ventas { background-color: #e3f2fd; border-bottom: 3px solid #2196f3; }
+.ventas i { color: #2196f3; }
+
+.recaudado { background-color: #e8f5e9; border-bottom: 3px solid #4caf50; }
+.recaudado i { color: #4caf50; }
+
+.acumulado { background-color: #fffde7; border-bottom: 3px solid #fbc02d; }
+.acumulado i { color: #fbc02d; }
+
+.casa { background-color: #f3e5f5; border-bottom: 3px solid #9c27b0; }
+.casa i { color: #9c27b0; }
+
+.domingo { background-color: #e0f2f1; border-bottom: 3px solid #009688; }
+.domingo i { color: #009688; }
+
+.repartir { background-color: #fff3e0; border-bottom: 3px solid #ff9800; }
+.repartir i { color: #ff9800; }
+
+.ganadores-box-item { background-color: #ffebee; border-bottom: 3px solid #f44336; }
+.ganadores-box-item i { color: #f44336; }
+
+/* ========================================================= */
+/* 3. CONTENEDORES Y TARJETAS                                 */
 /* ========================================================= */
 .card-container {
     display: grid;
@@ -78,55 +156,6 @@ header p {
     padding-bottom: 8px;
     display: inline-block;
 }
-
-/* ========================================================= */
-/* 3. BLOQUE FINANCIERO ULTRA COMPACTO (Sustitución)          */
-/* ========================================================= */
-.compact-resumen {
-    padding: 10px !important;
-}
-
-.compact-resumen h2 {
-    font-size: 0.95em !important;
-    margin-bottom: 8px !important;
-}
-
-.stats-grid-ultra {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-}
-
-.est-mini {
-    background: #f9f9f9;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    padding: 8px 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.val-mini {
-    font-size: 1.05em;
-    font-weight: 800;
-    color: #333;
-}
-
-.est-mini label {
-    font-size: 0.58em;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #777;
-    margin-top: 2px;
-}
-
-.ganadores-destacado {
-    background-color: #fffde7;
-    border: 1px solid #fdd835;
-}
-.ganadores-destacado .val-mini { color: #e65100; }
 
 /* ========================================================= */
 /* 4. TABLA DE RESULTADOS (CUADRÍCULA POR HORAS)             */
@@ -246,11 +275,6 @@ tbody td {
     font-weight: 600;
 }
 
-tbody tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
 tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
@@ -344,10 +368,6 @@ tbody tr:hover {
 /* ========================================================= */
 /* 8. BOTÓN PDF                                              */
 /* ========================================================= */
-.pdf-container {
-    margin-bottom: 20px;
-}
-
 #btn-descargar-pdf {
     background-color: #d32f2f;
     color: white;
@@ -502,15 +522,6 @@ form button:hover {
     background-color: #c82333;
 }
 
-.admin-nota-aviso {
-    display: block;
-    color: #d32f2f;
-    font-size: 0.8em;
-    font-weight: 700;
-    margin-top: 5px;
-    font-style: italic;
-}
-
 /* ========================================================= */
 /* 10. FOOTER                                                */
 /* ========================================================= */
@@ -548,13 +559,6 @@ footer {
         font-size: 0.75em;
     }
     
-    .nombre-participante {
-        max-width: 80px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
     #lista-participantes li, #lista-resultados li {
         flex-direction: column;
         align-items: flex-start;
@@ -562,34 +566,21 @@ footer {
     }
 
     .tabla-horarios { font-size: 0.65em; }
-    .col-ruleta { padding-left: 5px !important; font-size: 0.8em; }
 }
 
 /* ========================================================= */
-/* 12. ESTILOS PARA LA LETRA "O"                              */
-/* ========================================================= */
-.ranking-box.hit[data-num="O"], .celda-numero[data-num="O"] {
-    font-family: 'Arial Black', sans-serif; 
-    color: #fff;
-    background-color: #2e7d32;
-}
-
-/* ========================================================= */
-/* 13. ESTILOS DE IMPRESIÓN (PDF)                             */
+/* 12. ESTILOS DE IMPRESIÓN (PDF)                             */
 /* ========================================================= */
 @media print {
-    #btn-descargar-pdf, 
-    .filtro-container, 
-    footer, 
-    .pdf-container,
-    .btn-descargar,
-    button {
+    #btn-descargar-pdf, .filtro-container, footer, button {
         display: none !important;
     }
     
     body {
-        background-color: white !important;
-        color: black !important;
+        background-color: #212121 !important;
+        color: #eee !important;
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important;
         padding: 0;
         margin: 0;
     }
@@ -597,34 +588,39 @@ footer {
     header {
         background-color: #fdd835 !important;
         color: #333 !important;
-        border: 1px solid #000;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     .card {
-        box-shadow: none !important;
-        border: 1px solid #ddd !important;
-        padding: 8px !important;
+        background-color: #ffffff !important;
+        color: #333 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
-    /* REDUCCIÓN DE RESUMEN AL IMPRIMIR A UNA FILA */
+    /* REDUCCIÓN DE RESUMEN AL IMPRIMIR A UNA FILA HORIZONTAL */
     .stats-grid-ultra {
         grid-template-columns: repeat(7, 1fr) !important;
         gap: 2px !important;
     }
 
     .est-mini {
-        border: 1px solid #999 !important;
-        padding: 4px 2px !important;
-        background: white !important;
+        border: 1px solid #ddd !important;
+        padding: 4px 1px !important;
+        min-height: auto !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
-    .val-mini { font-size: 0.82em !important; }
-    .est-mini label { font-size: 0.52em !important; }
+    .val-mini { font-size: 0.75em !important; }
+    .est-mini label { font-size: 0.45em !important; }
+    .est-mini i { font-size: 0.7em !important; }
 
     tbody tr, tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-    @page { margin: 0.5cm; }
+    @page { margin: 0; }
 }
