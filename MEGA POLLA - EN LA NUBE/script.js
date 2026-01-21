@@ -40,30 +40,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // CARGA INICIAL DESDE SUPABASE
     async function cargarDatosDesdeNube() {
         try {
-            // Obtener Participantes
-            const { data: p, error: ep } = await _supabase
-                .from('participantes')
-                .select('*')
-                .order('nro', { ascending: true });
-
-            // Obtener Resultados (Números ganadores del día)
-            const { data: r, error: er } = await _supabase
-                .from('resultados')
-                .select('*');
-
-            // Obtener Finanzas (Totales)
-            const { data: f, error: ef } = await _supabase
-                .from('finanzas')
-                .select('*')
-                .single();
+            const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
+            const { data: r } = await _supabase.from('resultados').select('*');
+            const { data: f } = await _supabase.from('finanzas').select('*').single();
 
             if (p) participantesData = p;
             if (r) {
                 resultadosAdmin = r;
-                // Extraer solo los números para el cálculo de aciertos
                 resultadosDelDia = r.map(res => String(res.numero));
             }
             if (f) {
@@ -84,7 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         configurarFiltro();
     }
 
-    // LÓGICA DE CÁLCULO DE ACIERTOS
+    // ----------------------------------------------------------------
+    // PARTE 2: Funciones Lógicas de Cálculo
+    // ----------------------------------------------------------------
+
     function calcularAciertos(jugadorJugadas, ganadores) {
         let aciertos = 0;
         const ganadoresSet = new Set(ganadores.map(val => String(val))); 
@@ -98,7 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return aciertos;
     }
 
-    // RENDERIZADO DE FINANZAS
     function actualizarFinanzasYEstadisticas() {
         const ventasEl = document.getElementById('ventas');
         const recaudadoEl = document.getElementById('recaudado');
@@ -109,19 +96,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const montoRecaudadoHoy = parseFloat(finanzasData.recaudado) || 0;
         const montoAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
+
         const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
+        
+        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
         if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
         if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
         
-        // Cálculos porcentuales
-        if (repartirEl) repartirEl.textContent = formatearBS(GRAN_TOTAL * 0.75);
-        if (casaEl) casaEl.textContent = formatearBS(GRAN_TOTAL * 0.20);
-        if (domingoEl) domingoEl.textContent = formatearBS(GRAN_TOTAL * 0.05);
+        if (repartirEl) {
+            const premio = GRAN_TOTAL * 0.75;
+            repartirEl.textContent = formatearBS(premio);
+        }
+
+        if (casaEl) {
+            const casa = GRAN_TOTAL * 0.20;
+            casaEl.textContent = formatearBS(casa);
+        }
+
+        if (domingoEl) {
+            const domingo = GRAN_TOTAL * 0.05;
+            domingoEl.textContent = formatearBS(domingo);
+        }
     }
 
-    // RENDERIZADO DE TABLA DE HORARIOS (RESULTADOS DEL DÍA)
+    // ----------------------------------------------------------------
+    // PARTE 3: Renderizado de Interfaz
+    // ----------------------------------------------------------------
+
     function renderResultadosDia() {
         const container = document.getElementById('numeros-ganadores-display');
         if (!container) return;
@@ -140,7 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const hora = partes.pop(); 
             const nombreRuleta = partes.join(' ');
 
-            if (!mapaResultados[nombreRuleta]) mapaResultados[nombreRuleta] = {};
+            if (!mapaResultados[nombreRuleta]) {
+                mapaResultados[nombreRuleta] = {};
+            }
             mapaResultados[nombreRuleta][hora] = res.numero;
         });
 
@@ -159,7 +164,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         nombresRuletas.forEach(ruleta => {
             tablaHTML += `<tr><td class="col-ruleta">${ruleta}</td>`;
             horas.forEach(h => {
-                const num = (mapaResultados[ruleta] && mapaResultados[ruleta][h]) ? mapaResultados[ruleta][h] : "--";
+                const num = (mapaResultados[ruleta] && mapaResultados[ruleta][h]) 
+                            ? mapaResultados[ruleta][h] 
+                            : "--";
                 const claseNum = num === "--" ? "sin-resultado" : "celda-numero";
                 tablaHTML += `<td class="${claseNum}">${num}</td>`;
             });
@@ -170,7 +177,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.innerHTML = tablaHTML;
     }
 
-    // RENDERIZADO DE RANKING Y LISTADO
     function renderRanking(filtro = "") {
         const tbody = document.getElementById('ranking-body');
         if (!tbody) return;
@@ -235,47 +241,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ----------------------------------------------------------------
-    // PARTE 2: Descarga de PDF Directa (Tabloide, Márgenes 0)
-    // ----------------------------------------------------------------
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
-        btnDescargarPdf.addEventListener('click', function() {
-            // Seleccionamos todo el body para el PDF
-            const element = document.body;
-
-            // Opciones de configuración del archivo
-            const opt = {
-                margin:       0,
-                filename:     'MEGA_POLLA_Resultados.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    backgroundColor: '#212121', // Mantiene el fondo oscuro
-                    logging: false 
-                },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: 'tabloid', // Tamaño tabloide
-                    orientation: 'portrait' 
-                }
-            };
-
-            // Ocultar botones y filtros para que no salgan en el PDF
-            this.style.display = 'none';
-            const filtroCont = document.querySelector('.filtro-container');
-            if (filtroCont) filtroCont.style.display = 'none';
-
-            // Generar y guardar directamente
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Volver a mostrar los elementos
-                this.style.display = 'flex';
-                if (filtroCont) filtroCont.style.display = 'block';
-            });
+        btnDescargarPdf.addEventListener('click', () => {
+            window.print();
         });
     }
 
-    // Iniciar carga
     cargarDatosDesdeNube();
 });
