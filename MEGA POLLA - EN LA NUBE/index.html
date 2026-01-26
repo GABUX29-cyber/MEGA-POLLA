@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEGA POLLA - Resultados</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -31,45 +31,46 @@
                 
                 <div class="est-mini ventas">
                     <i class="fas fa-ticket-alt"></i>
-                    <span id="val-ventas" class="val-mini">0</span>
-                    <label>Tickets</label>
+                    <span class="val-mini" id="ventas">0</span>
+                    <label>Tickets Vendidos</label>
                 </div>
 
                 <div class="est-mini recaudado">
-                    <i class="fas fa-coins"></i>
-                    <span id="val-recaudado" class="val-mini">0 BS</span>
-                    <label>Ventas</label>
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span class="val-mini" id="recaudado">0.00 BS</span>
+                    <label>Total Recaudado</label>
                 </div>
 
                 <div class="est-mini acumulado">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <span id="val-acumulado" class="val-mini">0 BS</span>
-                    <label>Acumulado</label>
+                    <i class="fas fa-trophy"></i>
+                    <span class="val-mini" id="acumulado1">0.00 BS</span>
+                    <label>Acumulado Anterior</label>
                 </div>
 
                 <div class="est-mini casa">
-                    <i class="fas fa-building"></i>
-                    <span id="val-casa" class="val-mini">0 BS</span>
-                    <label>Casa (20%)</label>
+                    <i class="fas fa-university"></i>
+                    <span class="val-mini" id="monto-casa">0.00 BS</span>
+                    <label>20% Casa</label>
                 </div>
 
                 <div class="est-mini domingo">
-                    <i class="fas fa-star"></i>
-                    <span id="val-domingo" class="val-mini">0 BS</span>
-                    <label>Domingo (10%)</label>
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="val-mini" id="monto-domingo">0.00 BS</span>
+                    <label>5% Día Domingo</label>
                 </div>
 
                 <div class="est-mini repartir">
-                    <i class="fas fa-trophy"></i>
-                    <span id="val-repartir" class="val-mini">0 BS</span>
-                    <label>A Repartir</label>
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span class="val-mini" id="repartir75">0.00 BS</span>
+                    <label>Premio a Repartir</label>
                 </div>
 
                 <div class="est-mini ganadores-box-item">
                     <i class="fas fa-users"></i>
-                    <span id="total-ganadores" class="val-mini">0</span>
-                    <label>Ganadores</label>
+                    <span class="val-mini" id="total-ganadores">0</span>
+                    <label>Ganadores 7 Aciertos</label>
                 </div>
+
             </div>
         </div>
     </div>
@@ -89,7 +90,7 @@
 
     <div class="card-container full-width">
         <div class="card ranking">
-            <h2><i class="fas fa-list-ol\"></i> Listado de Participantes</h2>
+            <h2><i class="fas fa-list-ol"></i> Listado de Participantes</h2>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
