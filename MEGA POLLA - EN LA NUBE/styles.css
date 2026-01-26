@@ -194,10 +194,11 @@ header p {
     padding-left: 10px !important;
 }
 
+/* MODIFICACIÓN SOLICITADA: Color Negro y tamaño más grande */
 .celda-numero {
     font-weight: 800;
-    font-size: 1.1em;
-    color: #d32f2f;
+    font-size: 1.3em;
+    color: #000000;
 }
 
 .sin-resultado {
