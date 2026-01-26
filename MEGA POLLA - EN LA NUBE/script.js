@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
         
+        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
         if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
         if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
         
@@ -240,74 +241,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // =========================================================
-    // LÓGICA DE IMPRESIÓN "ULTRA-FIX" (TABLOIDE + ZOOM + PC OK)
-    // =========================================================
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
-            
-            const esMovil = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (!esMovil) {
-                // PC: Impresión nativa normal (sin cambios de escala)
-                window.print();
-            } else {
-                // TLF: Forzado de parámetros Tabloide, Zoom y Márgenes
-                const viewport = document.querySelector('meta[name="viewport"]');
-                const originalContent = viewport ? viewport.getAttribute('content') : "";
-                
-                if (viewport) {
-                    viewport.setAttribute('content', 'width=1024');
-                }
-
-                const style = document.createElement('style');
-                style.id = "print-ultra-fix";
-                style.innerHTML = `
-                    @media print {
-                        @page { 
-                            size: 11in 17in; /* FUERZA TAMAÑO TABLOIDE */
-                            margin: 0mm;    /* ELIMINA ENCABEZADOS Y PIES DE PÁGINA NATALES */
-                        }
-                        * {
-                            -webkit-print-color-adjust: exact !important;
-                            print-color-adjust: exact !important;
-                        }
-                        html, body {
-                            width: 1024px !important;
-                            margin: 0 auto !important;
-                            padding: 0 !important;
-                            background-color: #212121 !important;
-                        }
-                        body {
-                            /* ZOOM 90% SIMULADO Y CENTRADO TOTAL */
-                            transform: scale(0.9);
-                            transform-origin: top center;
-                        }
-                        header, .card-container {
-                            width: 980px !important;
-                            margin: 10px auto !important;
-                        }
-                        /* Ocultar elementos innecesarios en el PDF del tlf */
-                        .filtro-container, #btn-descargar-pdf, footer {
-                            display: none !important;
-                        }
-                    }
-                `;
-                document.head.appendChild(style);
-
-                // Tiempo para que el navegador móvil procese el ancho de 1024px
-                setTimeout(() => {
-                    window.print();
-                    
-                    // Restaurar el estado visual original después de cerrar el menú de impresión
-                    setTimeout(() => {
-                        if (viewport) viewport.setAttribute('content', originalContent);
-                        const s = document.getElementById("print-ultra-fix");
-                        if (s) document.head.removeChild(s);
-                    }, 1500);
-                }, 600);
-            }
+            window.print();
         });
     }
 
