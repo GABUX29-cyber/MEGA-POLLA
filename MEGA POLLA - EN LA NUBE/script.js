@@ -241,62 +241,72 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =========================================================
-    // LÓGICA DE IMPRESIÓN MEJORADA (PC vs TELÉFONO CENTRADO)
+    // LÓGICA DE IMPRESIÓN "ULTRA-FIX" (TABLOIDE + ZOOM + PC OK)
     // =========================================================
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
             
-            // 1. Detectamos si es un dispositivo móvil
             const esMovil = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
             if (!esMovil) {
-                // SI ES PC: Imprimir normal (esto respeta el comportamiento perfecto de Chrome/Firefox en escritorio)
+                // PC: Impresión nativa normal (sin cambios de escala)
                 window.print();
             } else {
-                // SI ES TELÉFONO: Aplicar corrección de centrado y ancho
+                // TLF: Forzado de parámetros Tabloide, Zoom y Márgenes
                 const viewport = document.querySelector('meta[name="viewport"]');
-                const originalContent = viewport ? viewport.getAttribute('content') : "width=device-width, initial-scale=1.0";
+                const originalContent = viewport ? viewport.getAttribute('content') : "";
                 
-                // Forzamos el ancho para que la tabla no se colapse
                 if (viewport) {
                     viewport.setAttribute('content', 'width=1024');
                 }
 
                 const style = document.createElement('style');
-                style.id = "temp-print-mobile-fix";
+                style.id = "print-ultra-fix";
                 style.innerHTML = `
                     @media print {
-                        @page { size: A4 portrait; margin: 5mm; }
-                        html, body { 
-                            width: 1024px !important; 
-                            margin: 0 auto !important; 
+                        @page { 
+                            size: 11in 17in; /* FUERZA TAMAÑO TABLOIDE */
+                            margin: 0mm;    /* ELIMINA ENCABEZADOS Y PIES DE PÁGINA NATALES */
+                        }
+                        * {
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        html, body {
+                            width: 1024px !important;
+                            margin: 0 auto !important;
                             padding: 0 !important;
-                            display: block !important;
+                            background-color: #212121 !important;
                         }
-                        header, .card-container { 
-                            width: 1000px !important; 
-                            margin: 10px auto !important; /* CENTRADO DINÁMICO */
-                            float: none !important;
+                        body {
+                            /* ZOOM 90% SIMULADO Y CENTRADO TOTAL */
+                            transform: scale(0.9);
+                            transform-origin: top center;
                         }
-                        table { width: 100% !important; margin: 0 auto !important; }
-                        /* Evitamos que Firefox móvil rompa páginas */
-                        tr { page-break-inside: avoid !important; }
+                        header, .card-container {
+                            width: 980px !important;
+                            margin: 10px auto !important;
+                        }
+                        /* Ocultar elementos innecesarios en el PDF del tlf */
+                        .filtro-container, #btn-descargar-pdf, footer {
+                            display: none !important;
+                        }
                     }
                 `;
                 document.head.appendChild(style);
 
-                // Esperamos a que el renderizado de 1024px se complete
+                // Tiempo para que el navegador móvil procese el ancho de 1024px
                 setTimeout(() => {
                     window.print();
                     
-                    // Restaurar vista del móvil
+                    // Restaurar el estado visual original después de cerrar el menú de impresión
                     setTimeout(() => {
                         if (viewport) viewport.setAttribute('content', originalContent);
-                        const s = document.getElementById("temp-print-mobile-fix");
+                        const s = document.getElementById("print-ultra-fix");
                         if (s) document.head.removeChild(s);
-                    }, 1000);
-                }, 500);
+                    }, 1500);
+                }, 600);
             }
         });
     }
