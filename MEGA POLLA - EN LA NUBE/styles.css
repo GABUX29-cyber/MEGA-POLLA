@@ -569,58 +569,88 @@ footer {
 }
 
 /* ========================================================= */
-/* 12. ESTILOS DE IMPRESIÓN (PDF)                             */
+/* 12. ESTILOS DE IMPRESIÓN MAESTROS (PDF VECTORIAL LIMPIO)   */
 /* ========================================================= */
+
+/* Fuerza el renderizado de colores en todos los navegadores móviles y desktop */
+* {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+}
+
 @media print {
-    #btn-descargar-pdf, .filtro-container, footer, button {
-        display: none !important;
-    }
-    
-    body {
-        background-color: #212121 !important;
-        color: #eee !important;
-        -webkit-print-color-adjust: exact !important; 
-        print-color-adjust: exact !important;
-        padding: 0;
-        margin: 0;
+    /* 1. ELIMINAR ENCABEZADOS Y PIES DE PÁGINA DEL NAVEGADOR (Fecha, URL, Título) */
+    @page {
+        size: tabloid portrait;
+        margin: 0mm !important; /* El margen cero elimina la "basura" del navegador */
     }
 
+    body {
+        background-color: #212121 !important;
+        padding: 10mm !important; /* Margen estético para que el contenido no toque el borde del papel */
+        margin: 0 !important;
+        display: block !important; /* Evita problemas de flex en impresión */
+    }
+
+    /* 2. OCULTAR ELEMENTOS INNECESARIOS */
+    #btn-descargar-pdf, 
+    .filtro-container, 
+    footer, 
+    .admin-section, 
+    #paste-section, 
+    .btn-editar, 
+    .btn-eliminar,
+    button {
+        display: none !important;
+    }
+
+    /* 3. ESTABILIDAD DE DISEÑO */
     header {
         background-color: #fdd835 !important;
-        color: #333 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin-bottom: 20px !important;
     }
 
     .card {
         background-color: #ffffff !important;
-        color: #333 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid !important; /* Evita que una tabla o sección se parta a la mitad */
+        margin-bottom: 15px !important;
+        width: 100% !important;
     }
 
-    /* REDUCCIÓN DE RESUMEN AL IMPRIMIR A UNA FILA HORIZONTAL */
+    /* 4. FORZAR INFO EXTRA A FILA HORIZONTAL ÚNICA */
     .stats-grid-ultra {
+        display: grid !important;
         grid-template-columns: repeat(7, 1fr) !important;
         gap: 2px !important;
     }
 
     .est-mini {
         border: 1px solid #ddd !important;
-        padding: 4px 1px !important;
+        padding: 5px 1px !important;
         min-height: auto !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
     }
 
     .val-mini { font-size: 0.75em !important; }
     .est-mini label { font-size: 0.45em !important; }
     .est-mini i { font-size: 0.7em !important; }
 
-    tbody tr, tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
+    /* 5. TABLAS NÍTIDAS */
+    table { 
+        width: 100% !important; 
+        border-collapse: collapse !important;
+    }
+    
+    th, td { 
+        border: 1px solid #ddd !important; 
     }
 
-    @page { margin: 0; }
+    tr {
+        page-break-inside: avoid !important;
+    }
 }
