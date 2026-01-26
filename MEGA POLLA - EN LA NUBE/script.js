@@ -100,8 +100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        
-        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
         if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
         if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
         
@@ -241,10 +239,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // =========================================================
+    // LÓGICA DE IMPRESIÓN UNIVERSAL (PARA PDF TIPO CHROME PC)
+    // =========================================================
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
-            window.print();
+            // 1. Forzar ancho de escritorio para que móviles y Firefox no amontonen nada
+            const viewport = document.querySelector('meta[name="viewport"]');
+            const originalContent = viewport ? viewport.getAttribute('content') : "width=device-width, initial-scale=1.0";
+            
+            if (viewport) {
+                viewport.setAttribute('content', 'width=1024, initial-scale=0.5');
+            }
+
+            // 2. Estilos temporales para corregir el comportamiento de Firefox y saltos de página
+            const printStyle = document.createElement('style');
+            printStyle.innerHTML = `
+                @media print {
+                    @page { size: A4 portrait; margin: 5mm; }
+                    html, body { width: 1024px !important; zoom: 75% !important; }
+                    table { page-break-inside: auto; width: 100% !important; }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+                    .card-container, header { width: 1024px !important; max-width: 1024px !important; }
+                }
+            `;
+            document.head.appendChild(printStyle);
+
+            // 3. Esperar a que el navegador asimile el cambio de ancho y disparar PDF
+            setTimeout(() => {
+                window.print();
+                
+                // 4. Restaurar la vista móvil normal después de imprimir
+                setTimeout(() => {
+                    if (viewport) viewport.setAttribute('content', originalContent);
+                    document.head.removeChild(printStyle);
+                }, 1000);
+            }, 500);
         });
     }
 
