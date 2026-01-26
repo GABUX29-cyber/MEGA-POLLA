@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
+        
+        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
         if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
         if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
         
@@ -240,42 +242,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // =========================================================
-    // LÓGICA DE IMPRESIÓN UNIVERSAL (PARA PDF TIPO CHROME PC)
+    // LÓGICA DE IMPRESIÓN UNIVERSAL MEJORADA
     // =========================================================
     const btnDescargarPdf = document.getElementById('btn-descargar-pdf');
     if (btnDescargarPdf) {
         btnDescargarPdf.addEventListener('click', () => {
-            // 1. Forzar ancho de escritorio para que móviles y Firefox no amontonen nada
-            const viewport = document.querySelector('meta[name="viewport"]');
-            const originalContent = viewport ? viewport.getAttribute('content') : "width=device-width, initial-scale=1.0";
             
-            if (viewport) {
-                viewport.setAttribute('content', 'width=1024, initial-scale=0.5');
-            }
-
-            // 2. Estilos temporales para corregir el comportamiento de Firefox y saltos de página
-            const printStyle = document.createElement('style');
-            printStyle.innerHTML = `
-                @media print {
-                    @page { size: A4 portrait; margin: 5mm; }
-                    html, body { width: 1024px !important; zoom: 75% !important; }
-                    table { page-break-inside: auto; width: 100% !important; }
-                    tr { page-break-inside: avoid; page-break-after: auto; }
-                    .card-container, header { width: 1024px !important; max-width: 1024px !important; }
-                }
-            `;
-            document.head.appendChild(printStyle);
-
-            // 3. Esperar a que el navegador asimile el cambio de ancho y disparar PDF
-            setTimeout(() => {
+            // Verificamos si es Chrome en PC para no afectar lo que ya funciona bien
+            const esChromePC = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor) && !/Mobile/.test(navigator.userAgent);
+            
+            if (esChromePC) {
                 window.print();
+            } else {
+                // Para Firefox, Safari y Móviles aplicamos correcciones
+                const viewport = document.querySelector('meta[name="viewport"]');
+                const originalContent = viewport ? viewport.getAttribute('content') : "width=device-width, initial-scale=1.0";
                 
-                // 4. Restaurar la vista móvil normal después de imprimir
+                // Forzamos el renderizado a 1024px
+                if (viewport) {
+                    viewport.setAttribute('content', 'width=1024');
+                }
+
+                const style = document.createElement('style');
+                style.id = "temp-print-fix";
+                style.innerHTML = `
+                    @media print {
+                        @page { size: A4 portrait; margin: 10mm 5mm; }
+                        html, body { width: 1024px !important; min-width: 1024px !important; zoom: 78% !important; }
+                        .card-container, header { width: 95% !important; max-width: 1000px !important; }
+                        table { page-break-inside: auto; width: 100% !important; }
+                        tr { page-break-inside: avoid !important; page-break-after: auto !important; }
+                    }
+                `;
+                document.head.appendChild(style);
+
                 setTimeout(() => {
-                    if (viewport) viewport.setAttribute('content', originalContent);
-                    document.head.removeChild(printStyle);
-                }, 1000);
-            }, 500);
+                    window.print();
+                    
+                    // Restauramos después de imprimir
+                    setTimeout(() => {
+                        if (viewport) viewport.setAttribute('content', originalContent);
+                        const styleToRemove = document.getElementById("temp-print-fix");
+                        if (styleToRemove) document.head.removeChild(styleToRemove);
+                    }, 1000);
+                }, 500);
+            }
         });
     }
 
