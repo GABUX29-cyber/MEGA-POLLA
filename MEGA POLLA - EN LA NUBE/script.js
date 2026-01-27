@@ -202,11 +202,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const tr = document.createElement('tr');
             
-            // ASIGNACIÓN DINÁMICA DE CLASE DE COLOR SEGÚN ACIERTOS
-            if (p.aciertos > 0) {
-                tr.classList.add(`fila-acierto-${p.aciertos}`);
-            }
-
             let jugadasHTML = '';
             for (let i = 0; i < JUGADA_SIZE; i++) {
                 const num = p.jugadas[i] ? String(p.jugadas[i]) : '--';

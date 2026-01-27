@@ -196,8 +196,8 @@ header p {
 
 .celda-numero {
     font-weight: 800;
-    font-size: 1.3em;
-    color: #000000;
+    font-size: 1.1em;
+    color: #d32f2f;
 }
 
 .sin-resultado {
@@ -282,15 +282,6 @@ tbody tr:nth-child(even) {
 tbody tr:hover {
     background-color: #fffde7;
 }
-
-/* ESTILOS DE COLORES POR ACIERTOS (PASTELES) */
-.fila-acierto-1 { background-color: #f3e5f5 !important; } /* Lavanda */
-.fila-acierto-2 { background-color: #e3f2fd !important; } /* Azul Cielo */
-.fila-acierto-3 { background-color: #e0f2f1 !important; } /* Turquesa */
-.fila-acierto-4 { background-color: #fffde7 !important; } /* Amarillo */
-.fila-acierto-5 { background-color: #ffebee !important; } /* Rojito Claro */
-.fila-acierto-6 { background-color: #fff3e0 !important; } /* Naranja Pastel */
-.fila-acierto-7 { background-color: #e8f5e9 !important; } /* Verde Pastel */
 
 .ranking-box {
     display: inline-block;
