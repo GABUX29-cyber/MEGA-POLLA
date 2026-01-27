@@ -36,97 +36,145 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
             const fechaFormateada = ahora.toLocaleDateString('es-ES', opciones);
             headerP.style.textTransform = 'capitalize';
-            headerP.innerHTML = `<i class="far fa-calendar-alt"></i> ${fechaFormateada}`;
+            headerP.innerHTML = `<i class="fas fa-calendar-alt"></i> ${fechaFormateada}`;
         }
     }
 
-    async function cargarDatos() {
+    async function cargarDatosDesdeNube() {
         try {
-            const { data: res, error: errRes } = await supabase.from('resultados').select('*');
-            if (errRes) throw errRes;
-            resultadosAdmin = res || [];
+            const { data: p } = await _supabase.from('participantes').select('*').order('nro', { ascending: true });
+            const { data: r } = await _supabase.from('resultados').select('*');
+            const { data: f } = await _supabase.from('finanzas').select('*').single();
 
-            const { data: part, error: errPart } = await supabase.from('participantes').select('*');
-            if (errPart) throw errPart;
-            participantesData = part || [];
-
-            const { data: fin, error: errFin } = await supabase.from('finanzas').select('*').single();
-            if (!errFin && fin) {
-                finanzasData = fin;
+            if (p) participantesData = p;
+            if (r) {
+                resultadosAdmin = r;
+                resultadosDelDia = r.map(res => String(res.numero));
+            }
+            if (f) {
+                finanzasData = f;
             }
 
-            procesarResultadosParaTabla();
-            calcularRanking();
-            actualizarFinanzasUI();
-            renderRanking();
+            inicializarSistema();
         } catch (error) {
-            console.error("Error cargando datos:", error);
+            console.error("Error cargando datos de Supabase:", error);
         }
     }
 
-    function procesarResultadosParaTabla() {
-        const ruletas = ["LOTTO ACTIVO", "GRANJITA", "SELVA PLUS"];
-        const horarios = [
-            "8AM", "9AM", "10AM", "11AM", "12PM", "1PM", 
-            "2PM", "3PM", "4PM", "5PM", "6PM", "7PM"
-        ];
+    function inicializarSistema() {
+        establecerFechaReal(); 
+        actualizarFinanzasYEstadisticas(); 
+        renderResultadosDia();
+        renderRanking();
+        configurarFiltro();
+    }
 
-        resultadosDelDia = [];
-        const tbody = document.querySelector('#tabla-resultados-body');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+    // ----------------------------------------------------------------
+    // PARTE 2: Funciones Lógicas de Cálculo
+    // ----------------------------------------------------------------
 
-        ruletas.forEach(ruleta => {
-            const tr = document.createElement('tr');
-            let html = `<td class="col-ruleta">${ruleta}</td>`;
-            
-            horarios.forEach(hora => {
-                const encontrado = resultadosAdmin.find(r => r.ruleta === ruleta && r.horario === hora);
-                const valor = encontrado ? encontrado.numero : '-';
-                const clase = encontrado ? 'celda-numero' : 'sin-resultado';
-                html += `<td class="${clase}">${valor}</td>`;
-                
-                if (encontrado && encontrado.numero) {
-                    resultadosDelDia.push(encontrado.numero);
-                }
-            });
-            tr.innerHTML = html;
-            tbody.appendChild(tr);
+    function calcularAciertos(jugadorJugadas, ganadores) {
+        let aciertos = 0;
+        const ganadoresSet = new Set(ganadores.map(val => String(val))); 
+        
+        jugadorJugadas.forEach(num => {
+            let numProcesado = String(num);
+            if (ganadoresSet.has(numProcesado)) {
+                aciertos++;
+            }
         });
+        return aciertos;
     }
 
-    function calcularRanking() {
-        rankingCalculado = participantesData.map(p => {
-            const jugadaArray = p.jugada ? p.jugada.split(',') : [];
-            let aciertos = 0;
-            jugadaArray.forEach(num => {
-                if (resultadosDelDia.includes(num.trim())) {
-                    aciertos++;
-                }
-            });
-            return { ...p, aciertos, jugadaArray };
-        }).sort((a, b) => b.aciertos - a.aciertos);
-    }
+    function actualizarFinanzasYEstadisticas() {
+        const ventasEl = document.getElementById('ventas');
+        const recaudadoEl = document.getElementById('recaudado');
+        const acumuladoEl = document.getElementById('acumulado1');
+        const repartirEl = document.getElementById('repartir75');
+        const casaEl = document.getElementById('monto-casa');
+        const domingoEl = document.getElementById('monto-domingo');
 
-    function actualizarFinanzasUI() {
-        const ventasEl = document.getElementById('total-ventas');
-        const recaudadoEl = document.getElementById('total-recaudado');
-        const acumuladoEl = document.getElementById('acumulado-anterior');
-        const casaEl = document.getElementById('comision-casa');
-        const domingoEl = document.getElementById('comision-domingo');
-        const repartirEl = document.getElementById('premio-repartir');
+        const montoRecaudadoHoy = parseFloat(finanzasData.recaudado) || 0;
+        const montoAcumuladoAnterior = parseFloat(finanzasData.acumulado1) || 0;
+
+        const GRAN_TOTAL = montoRecaudadoHoy + montoAcumuladoAnterior;
 
         if (ventasEl) ventasEl.textContent = finanzasData.ventas;
-        if (recaudadoEl) recaudadoEl.textContent = formatearBS(finanzasData.recaudado);
-        if (acumuladoEl) acumuladoEl.textContent = formatearBS(finanzasData.acumulado1);
+        
+        // APLICANDO EL NUEVO FORMATO A TODOS LOS CAMPOS
+        if (recaudadoEl) recaudadoEl.textContent = formatearBS(montoRecaudadoHoy);
+        if (acumuladoEl) acumuladoEl.textContent = formatearBS(montoAcumuladoAnterior);
+        
+        if (repartirEl) {
+            const premio = GRAN_TOTAL * 0.75;
+            repartirEl.textContent = formatearBS(premio);
+        }
 
-        const casa = finanzasData.recaudado * 0.20;
-        const domingo = finanzasData.recaudado * 0.05;
-        const repartir = (finanzasData.recaudado - casa - domingo) + finanzasData.acumulado1;
+        if (casaEl) {
+            const casa = GRAN_TOTAL * 0.20;
+            casaEl.textContent = formatearBS(casa);
+        }
 
-        if (casaEl) casaEl.textContent = formatearBS(casa);
-        if (domingoEl) domingoEl.textContent = formatearBS(domingo);
-        if (repartirEl) repartirEl.textContent = formatearBS(repartir);
+        if (domingoEl) {
+            const domingo = GRAN_TOTAL * 0.05;
+            domingoEl.textContent = formatearBS(domingo);
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // PARTE 3: Renderizado de Interfaz
+    // ----------------------------------------------------------------
+
+    function renderResultadosDia() {
+        const container = document.getElementById('numeros-ganadores-display');
+        if (!container) return;
+
+        if (resultadosAdmin.length === 0) {
+            container.innerHTML = '<p>Esperando resultados del sorteo...</p>';
+            return;
+        }
+
+        const horas = ["8AM", "9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM", "6PM", "7PM"];
+        const nombresRuletas = ["LOTTO ACTIVO", "GRANJITA", "SELVA PLUS"];
+
+        const mapaResultados = {};
+        resultadosAdmin.forEach(res => {
+            const partes = res.sorteo.split(' ');
+            const hora = partes.pop(); 
+            const nombreRuleta = partes.join(' ');
+
+            if (!mapaResultados[nombreRuleta]) {
+                mapaResultados[nombreRuleta] = {};
+            }
+            mapaResultados[nombreRuleta][hora] = res.numero;
+        });
+
+        let tablaHTML = `
+            <div class="tabla-resultados-wrapper">
+                <table class="tabla-horarios">
+                    <thead>
+                        <tr>
+                            <th style="background:#333; border:none;"></th>
+                            ${horas.map(h => `<th>${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        nombresRuletas.forEach(ruleta => {
+            tablaHTML += `<tr><td class="col-ruleta">${ruleta}</td>`;
+            horas.forEach(h => {
+                const num = (mapaResultados[ruleta] && mapaResultados[ruleta][h]) 
+                            ? mapaResultados[ruleta][h] 
+                            : "--";
+                const claseNum = num === "--" ? "sin-resultado" : "celda-numero";
+                tablaHTML += `<td class="${claseNum}">${num}</td>`;
+            });
+            tablaHTML += `</tr>`;
+        });
+
+        tablaHTML += `</tbody></table></div>`;
+        container.innerHTML = tablaHTML;
     }
 
     function renderRanking(filtro = "") {
@@ -134,30 +182,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        let totalGanadores = 0;
+        rankingCalculado = participantesData.map(p => {
+            const numAciertos = calcularAciertos(p.jugadas, resultadosDelDia);
+            return { ...p, aciertos: numAciertos };
+        });
 
-        const filtrados = rankingCalculado.filter(p => 
-            p.nombre.toLowerCase().includes(filtro.toLowerCase()) || 
-            p.nro.toString().includes(filtro)
+        rankingCalculado.sort((a, b) => b.aciertos - a.aciertos);
+
+        const term = filtro.toLowerCase();
+        const dataFiltrada = rankingCalculado.filter(p => 
+            p.nombre.toLowerCase().includes(term) || 
+            p.refe.toString().includes(term)
         );
 
-        filtrados.forEach(p => {
+        let totalGanadores = 0;
+
+        dataFiltrada.forEach(p => {
             if (p.aciertos >= 7) totalGanadores++;
 
             const tr = document.createElement('tr');
-
-            // --- AÑADIDO PARA COLORES EN PDF Y WEB ---
+            
+            // ASIGNACIÓN DINÁMICA DE CLASE DE COLOR SEGÚN ACIERTOS
             if (p.aciertos > 0) {
-                tr.classList.add(`fila-acierto-${Math.min(p.aciertos, 7)}`);
+                tr.classList.add(`fila-acierto-${p.aciertos}`);
             }
-            // -----------------------------------------
 
             let jugadasHTML = '';
-            p.jugadaArray.forEach(num => {
-                const esAcierto = resultadosDelDia.includes(num.trim());
-                const claseGanador = esAcierto ? 'hit' : '';
+            for (let i = 0; i < JUGADA_SIZE; i++) {
+                const num = p.jugadas[i] ? String(p.jugadas[i]) : '--';
+                const esGanador = resultadosDelDia.includes(num);
+                const claseGanador = esGanador ? 'hit' : '';
                 jugadasHTML += `<td><span class="ranking-box ${claseGanador}">${num}</span></td>`;
-            });
+            }
 
             tr.innerHTML = `
                 <td>${p.nro}</td>
@@ -197,7 +253,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    establecerFechaReal();
-    cargarDatos();
-    configurarFiltro();
+    cargarDatosDesdeNube();
 });
