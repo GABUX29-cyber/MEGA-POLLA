@@ -1,46 +1,25 @@
-// Agregamos 'async' para que la validación criptográfica funcione correctamente
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     // ---------------------------------------------------------------------------------------
-    // --- CONSTANTES Y CONFIGURACIÓN ---
+    // --- SEGURIDAD ---
     // ---------------------------------------------------------------------------------------
-    // Las claves ya no son visibles. Estos códigos representan '29931335' y '24175402'
-    const CLAVES_HASH = [
-        '47644265406082467f564f8990d0910901e82846171542f7d988898b1ba420c1',
-        'a9f456073f32f3068f946894548d886653133e8a4a5840939f4174d82f768568'
-    ];
+    const _0x4d2 = ["Mjk5MzEzMzU=", "MjQxNzU0MDI="]; 
     const JUGADA_SIZE = 7; 
 
     let participantes = [];
     let resultados = [];
     let finanzas = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
 
-    // ---------------------------------------------------------------------------------------
-    // --- SEGURIDAD: FUNCIÓN DE VALIDACIÓN ---
-    // ---------------------------------------------------------------------------------------
-    async function validarAcceso() {
-        const entrada = prompt("🔒 Ingrese clave de administrador:");
-        if (!entrada) {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
-            return false;
-        }
-
-        // Convertir lo que el usuario escribió en un Hash SHA-256
-        const encoder = new TextEncoder();
-        const data = encoder.encode(entrada.trim());
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-        if (CLAVES_HASH.includes(hashHex)) {
-            // Si es correcto, mostramos la sección administrativa (CSS)
-            const adminSec = document.querySelector('.admin-section');
-            if (adminSec) adminSec.style.display = 'block';
-            return true;
-        } else {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
-            return false;
-        }
+    // Bloqueo Inicial
+    const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
+    
+    if (!claveAcceso || !_0x4d2.includes(btoa(claveAcceso.trim()))) {
+        document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
+        return; 
+    } else {
+        const adminSection = document.querySelector('.admin-section');
+        if (adminSection) adminSection.style.display = 'block';
+        cargarDatosDesdeNube();
     }
 
     // ---------------------------------------------------------------------------------------
@@ -291,7 +270,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inputAcumulado = document.getElementById('input-acumulado');
         if (inputAcumulado) inputAcumulado.value = finanzas.acumulado1;
 
-        // CÁLCULOS PARA VISTA PREVIA DEL ADMIN
         const montoCasa = (finanzas.recaudado * 0.20).toFixed(2);
         const montoDomingo = (finanzas.recaudado * 0.05).toFixed(2);
         
@@ -339,10 +317,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             cargarDatosDesdeNube();
         }
     };
-
-    // --- EJECUCIÓN INICIAL ---
-    const accesoOk = await validarAcceso();
-    if (accesoOk) {
-        cargarDatosDesdeNube();
-    }
 });
