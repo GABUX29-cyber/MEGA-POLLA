@@ -389,9 +389,10 @@ tbody tr:hover {
 }
 
 /* ========================================================= */
-/* 9. PANEL DE ADMINISTRACIÓN                                 */
+/* 9. PANEL DE ADMINISTRACIÓN (CORREGIDO)                    */
 /* ========================================================= */
 .admin-section {
+    display: none; /* OCULTO POR DEFECTO PARA SEGURIDAD */
     background-color: white;
     width: 100%;
     max-width: 900px;
