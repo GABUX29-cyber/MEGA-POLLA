@@ -1,12 +1,13 @@
-document.addEventListener('DOMContentLoaded', async () => { // Se agregó async aquí para el hash
+// Agregamos 'async' aquí para que la encriptación funcione
+document.addEventListener('DOMContentLoaded', async () => {
 
     // ---------------------------------------------------------------------------------------
     // --- CONSTANTES Y CONFIGURACIÓN ---
     // ---------------------------------------------------------------------------------------
-    // Se eliminaron las claves visibles y se reemplazaron por sus Hashes (Huellas digitales)
+    // YA NO HAY CLAVES VISIBLES. Solo sus huellas digitales (Hashes SHA-256)
     const HASHES_AUTORIZADOS = [
-        '47644265406082467f564f8990d0910901e82846171542f7d988898b1ba420c1', // 29931335
-        'a9f456073f32f3068f946894548d886653133e8a4a5840939f4174d82f768568'  // 24175402
+        '47644265406082467f564f8990d0910901e82846171542f7d988898b1ba420c1',
+        'a9f456073f32f3068f946894548d886653133e8a4a5840939f4174d82f768568'
     ];
     const JUGADA_SIZE = 7; 
 
@@ -232,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => { // Se agregó async 
                     nro: proximoNro,
                     nombre: nombreBase,
                     refe: refe,
-                    jugadas: procesado.numeros,
+                    jugadas: procesado.numbers || procesado.numeros,
                     notas_correccion: procesado.nota
                 };
 
@@ -306,34 +307,35 @@ document.addEventListener('DOMContentLoaded', async () => { // Se agregó async 
     };
 
     // ---------------------------------------------------------------------------------------
-    // --- NUEVO SISTEMA DE BLOQUEO POR HASH ---
+    // --- 6. BLOQUEO INICIAL CON SEGURIDAD HASH ---
     // ---------------------------------------------------------------------------------------
-    async function validarYEntrar() {
+    async function verificarAcceso() {
         const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
         
         if (!claveAcceso) {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;padding-top:50px;'>Acceso Denegado</h1>";
             return;
         }
 
-        // Convertir la entrada a Hash SHA-256
+        // Proceso de Encriptación
         const encoder = new TextEncoder();
-        const data = encoder.encode(claveAcceso);
+        const data = encoder.encode(claveAcceso.trim());
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
         if (!HASHES_AUTORIZADOS.includes(hashHex)) {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;padding-top:50px;'>Acceso Denegado</h1>";
         } else {
-            // MOSTRAR PANEL: Si usaste display:none en CSS, esto lo activa
-            const adminSec = document.querySelector('.admin-section');
-            if(adminSec) adminSec.style.display = 'block';
+            // MOSTRAR PANEL: Quita el display:none
+            const adminPanel = document.querySelector('.admin-section');
+            if (adminPanel) adminPanel.style.display = 'block';
             
+            // Cargar datos reales
             cargarDatosDesdeNube();
         }
     }
 
-    // Ejecutar validación
-    validarYEntrar();
+    // Ejecutamos la validación al cargar
+    await verificarAcceso();
 });
