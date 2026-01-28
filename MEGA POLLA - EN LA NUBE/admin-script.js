@@ -1,11 +1,11 @@
-// Agregamos 'async' aquí para que la encriptación funcione
+// Agregamos 'async' para que la validación criptográfica funcione correctamente
 document.addEventListener('DOMContentLoaded', async () => {
 
     // ---------------------------------------------------------------------------------------
     // --- CONSTANTES Y CONFIGURACIÓN ---
     // ---------------------------------------------------------------------------------------
-    // YA NO HAY CLAVES VISIBLES. Solo sus huellas digitales (Hashes SHA-256)
-    const HASHES_AUTORIZADOS = [
+    // Las claves ya no son visibles. Estos códigos representan '29931335' y '24175402'
+    const CLAVES_HASH = [
         '47644265406082467f564f8990d0910901e82846171542f7d988898b1ba420c1',
         'a9f456073f32f3068f946894548d886653133e8a4a5840939f4174d82f768568'
     ];
@@ -14,6 +14,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     let participantes = [];
     let resultados = [];
     let finanzas = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
+
+    // ---------------------------------------------------------------------------------------
+    // --- SEGURIDAD: FUNCIÓN DE VALIDACIÓN ---
+    // ---------------------------------------------------------------------------------------
+    async function validarAcceso() {
+        const entrada = prompt("🔒 Ingrese clave de administrador:");
+        if (!entrada) {
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
+            return false;
+        }
+
+        // Convertir lo que el usuario escribió en un Hash SHA-256
+        const encoder = new TextEncoder();
+        const data = encoder.encode(entrada.trim());
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        if (CLAVES_HASH.includes(hashHex)) {
+            // Si es correcto, mostramos la sección administrativa (CSS)
+            const adminSec = document.querySelector('.admin-section');
+            if (adminSec) adminSec.style.display = 'block';
+            return true;
+        } else {
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
+            return false;
+        }
+    }
 
     // ---------------------------------------------------------------------------------------
     // --- 1. FUNCIÓN DE PROCESAMIENTO (REGLAS DE NEGOCIO) ---
@@ -29,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let avisos = [];
         let avisosAlert = [];
 
+        // Regla: Máximo 7 números (elimina el sobrante)
         if (numeros.length > JUGADA_SIZE) {
             let eliminados = [];
             while (numeros.length > JUGADA_SIZE) {
@@ -39,11 +68,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             avisosAlert.push(`⚠️ ${msg}`);
         }
 
+        // Validación: Mínimo 7 números
         if (numeros.length < JUGADA_SIZE) {
             alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números.`);
             return null;
         }
 
+        // Gestión de Duplicados
         let counts = {};
         let duplicadosEncontrados = [];
         numeros.forEach(n => counts[n] = (counts[n] || 0) + 1);
@@ -74,6 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // Si hubo cambios, avisar al administrador antes de registrar
         if (avisosAlert.length > 0) {
             alert(`📝 CAMBIOS AUTOMÁTICOS EN ${nombreParticipante}:\n\n${avisosAlert.join('\n')}`);
         }
@@ -97,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (r) resultados = r;
             if (f) finanzas = f;
 
+            // --- SINCRONIZACIÓN AUTOMÁTICA HACIA LA NUBE ---
             if (p && f && p.length !== f.ventas) {
                 await _supabase.from('finanzas').update({ ventas: p.length }).eq('id', 1);
                 finanzas.ventas = p.length;
@@ -233,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     nro: proximoNro,
                     nombre: nombreBase,
                     refe: refe,
-                    jugadas: procesado.numbers || procesado.numeros,
+                    jugadas: procesado.numeros,
                     notas_correccion: procesado.nota
                 };
 
@@ -258,6 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inputAcumulado = document.getElementById('input-acumulado');
         if (inputAcumulado) inputAcumulado.value = finanzas.acumulado1;
 
+        // CÁLCULOS PARA VISTA PREVIA DEL ADMIN
         const montoCasa = (finanzas.recaudado * 0.20).toFixed(2);
         const montoDomingo = (finanzas.recaudado * 0.05).toFixed(2);
         
@@ -306,36 +340,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // ---------------------------------------------------------------------------------------
-    // --- 6. BLOQUEO INICIAL CON SEGURIDAD HASH ---
-    // ---------------------------------------------------------------------------------------
-    async function verificarAcceso() {
-        const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
-        
-        if (!claveAcceso) {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;padding-top:50px;'>Acceso Denegado</h1>";
-            return;
-        }
-
-        // Proceso de Encriptación
-        const encoder = new TextEncoder();
-        const data = encoder.encode(claveAcceso.trim());
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-        if (!HASHES_AUTORIZADOS.includes(hashHex)) {
-            document.body.innerHTML = "<h1 style='color:white;text-align:center;padding-top:50px;'>Acceso Denegado</h1>";
-        } else {
-            // MOSTRAR PANEL: Quita el display:none
-            const adminPanel = document.querySelector('.admin-section');
-            if (adminPanel) adminPanel.style.display = 'block';
-            
-            // Cargar datos reales
-            cargarDatosDesdeNube();
-        }
+    // --- EJECUCIÓN INICIAL ---
+    const accesoOk = await validarAcceso();
+    if (accesoOk) {
+        cargarDatosDesdeNube();
     }
-
-    // Ejecutamos la validación al cargar
-    await verificarAcceso();
 });
