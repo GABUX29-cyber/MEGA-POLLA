@@ -1,9 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => { // Se agregó async aquí para el hash
 
     // ---------------------------------------------------------------------------------------
     // --- CONSTANTES Y CONFIGURACIÓN ---
     // ---------------------------------------------------------------------------------------
-    const CLAVES_VALIDAS = ['29931335', '24175402'];
+    // Se eliminaron las claves visibles y se reemplazaron por sus Hashes (Huellas digitales)
+    const HASHES_AUTORIZADOS = [
+        '47644265406082467f564f8990d0910901e82846171542f7d988898b1ba420c1', // 29931335
+        'a9f456073f32f3068f946894548d886653133e8a4a5840939f4174d82f768568'  // 24175402
+    ];
     const JUGADA_SIZE = 7; 
 
     let participantes = [];
@@ -24,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let avisos = [];
         let avisosAlert = [];
 
-        // Regla: Máximo 7 números (elimina el sobrante)
         if (numeros.length > JUGADA_SIZE) {
             let eliminados = [];
             while (numeros.length > JUGADA_SIZE) {
@@ -35,13 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
             avisosAlert.push(`⚠️ ${msg}`);
         }
 
-        // Validación: Mínimo 7 números
         if (numeros.length < JUGADA_SIZE) {
             alert(`❌ ERROR en ${nombreParticipante}: Solo tiene ${numeros.length} números.`);
             return null;
         }
 
-        // Gestión de Duplicados
         let counts = {};
         let duplicadosEncontrados = [];
         numeros.forEach(n => counts[n] = (counts[n] || 0) + 1);
@@ -72,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Si hubo cambios, avisar al administrador antes de registrar
         if (avisosAlert.length > 0) {
             alert(`📝 CAMBIOS AUTOMÁTICOS EN ${nombreParticipante}:\n\n${avisosAlert.join('\n')}`);
         }
@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (r) resultados = r;
             if (f) finanzas = f;
 
-            // --- SINCRONIZACIÓN AUTOMÁTICA HACIA LA NUBE ---
             if (p && f && p.length !== f.ventas) {
                 await _supabase.from('finanzas').update({ ventas: p.length }).eq('id', 1);
                 finanzas.ventas = p.length;
@@ -258,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputAcumulado = document.getElementById('input-acumulado');
         if (inputAcumulado) inputAcumulado.value = finanzas.acumulado1;
 
-        // CÁLCULOS PARA VISTA PREVIA DEL ADMIN
         const montoCasa = (finanzas.recaudado * 0.20).toFixed(2);
         const montoDomingo = (finanzas.recaudado * 0.05).toFixed(2);
         
@@ -307,11 +305,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Bloqueo Inicial
-    const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
-    if (!CLAVES_VALIDAS.includes(claveAcceso)) {
-        document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
-    } else {
-        cargarDatosDesdeNube();
+    // ---------------------------------------------------------------------------------------
+    // --- NUEVO SISTEMA DE BLOQUEO POR HASH ---
+    // ---------------------------------------------------------------------------------------
+    async function validarYEntrar() {
+        const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
+        
+        if (!claveAcceso) {
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
+            return;
+        }
+
+        // Convertir la entrada a Hash SHA-256
+        const encoder = new TextEncoder();
+        const data = encoder.encode(claveAcceso);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        if (!HASHES_AUTORIZADOS.includes(hashHex)) {
+            document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Acceso Denegado</h1>";
+        } else {
+            // MOSTRAR PANEL: Si usaste display:none en CSS, esto lo activa
+            const adminSec = document.querySelector('.admin-section');
+            if(adminSec) adminSec.style.display = 'block';
+            
+            cargarDatosDesdeNube();
+        }
     }
+
+    // Ejecutar validación
+    validarYEntrar();
 });
