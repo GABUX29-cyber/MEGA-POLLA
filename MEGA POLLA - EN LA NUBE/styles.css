@@ -196,8 +196,8 @@ header p {
 
 .celda-numero {
     font-weight: 800;
-    font-size: 1.1em;
-    color: #d32f2f;
+    font-size: 1.5em; /* CAMBIO: Tamaño aumentado */
+    color: #000000 !important; /* CAMBIO: Color negro */
 }
 
 .sin-resultado {
@@ -246,7 +246,7 @@ header p {
 }
 
 /* ========================================================= */
-/* 6. TABLA DE RANKING / PARTICIPANTES                        */
+/* 6. TABLA DE RANKING / PARTICIPANTES                       */
 /* ========================================================= */
 .ranking {
     overflow-x: auto;
