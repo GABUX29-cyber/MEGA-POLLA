@@ -1,26 +1,60 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ---------------------------------------------------------------------------------------
-    // --- SEGURIDAD ---
+    // --- NUEVO SISTEMA DE SEGURIDAD (REEMPLAZA AL PROMPT) ---
     // ---------------------------------------------------------------------------------------
-    const _0x4d2 = ["Mjk5MzEzMzU=", "MjQxNzU0MDI="]; 
+    const loginOverlay = document.getElementById('login-overlay');
+    const contenidoPrincipal = document.getElementById('contenido-principal');
+    const btnEntrar = document.getElementById('btn-entrar');
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    const loginError = document.getElementById('login-error');
+    const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
+
+    // Función para Iniciar Sesión
+    btnEntrar.addEventListener('click', async () => {
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value.trim();
+
+        const { data, error } = await _supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            loginError.style.display = 'block';
+            loginError.textContent = "Datos incorrectos: " + error.message;
+        } else {
+            // Login exitoso
+            loginOverlay.style.display = 'none';
+            contenidoPrincipal.style.display = 'block';
+            cargarDatosDesdeNube();
+        }
+    });
+
+    // Función para Cerrar Sesión
+    btnCerrarSesion.addEventListener('click', async () => {
+        await _supabase.auth.signOut();
+        window.location.reload();
+    });
+
+    // Verificar si ya hay una sesión activa al cargar la página
+    async function verificarSesion() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            loginOverlay.style.display = 'none';
+            contenidoPrincipal.style.display = 'block';
+            cargarDatosDesdeNube();
+        }
+    }
+    verificarSesion();
+
+    // Variables globales de tu lógica
     const JUGADA_SIZE = 7; 
 
     let participantes = [];
     let resultados = [];
     let finanzas = { ventas: 0, recaudado: 0.00, acumulado1: 0.00 };
-
-    // Bloqueo Inicial
-    const claveAcceso = prompt("🔒 Ingrese clave de administrador:");
-    
-    if (!claveAcceso || !_0x4d2.includes(btoa(claveAcceso.trim()))) {
-        document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px;'>Acceso Denegado</h1>";
-        return; 
-    } else {
-        const adminSection = document.querySelector('.admin-section');
-        if (adminSection) adminSection.style.display = 'block';
-        cargarDatosDesdeNube();
-    }
 
     // ---------------------------------------------------------------------------------------
     // --- 1. FUNCIÓN DE PROCESAMIENTO (REGLAS DE NEGOCIO) ---
