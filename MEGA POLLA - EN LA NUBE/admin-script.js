@@ -351,4 +351,39 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarDatosDesdeNube();
         }
     };
+
+    // ---------------------------------------------------------------------------------------
+    // --- 6. FUNCIÓN DE REINICIO CON DOBLE CANDADO (AÑADIDA) ---
+    // ---------------------------------------------------------------------------------------
+    const btnReiniciar = document.getElementById('btn-reiniciar-datos');
+    if (btnReiniciar) {
+        btnReiniciar.addEventListener('click', async () => {
+            // PRIMER CANDADO: Confirmación visual
+            const confirmar1 = confirm("⚠️ ATENCIÓN CRÍTICA:\n¿Estás totalmente seguro de borrar TODOS los participantes y resultados para iniciar una nueva semana?");
+            
+            if (confirmar1) {
+                // SEGUNDO CANDADO: Confirmación por palabra clave
+                const confirmacionTexto = prompt("Para confirmar la eliminación permanente, escribe la palabra: BORRAR");
+
+                if (confirmacionTexto === "BORRAR") {
+                    try {
+                        // Borrar participantes y resultados en la nube
+                        const { error: errP } = await _supabase.from('participantes').delete().gt('id', 0);
+                        const { error: errR } = await _supabase.from('resultados').delete().gt('id', 0);
+
+                        if (errP || errR) {
+                            alert("❌ Error de permisos: Solo el Administrador puede realizar esta acción.");
+                        } else {
+                            alert("✅ SISTEMA REINICIADO:\nSe han borrado todos los registros con éxito.");
+                            window.location.reload();
+                        }
+                    } catch (err) {
+                        alert("❌ Error de conexión con el servidor.");
+                    }
+                } else {
+                    alert("❌ Palabra incorrecta. Acción cancelada.");
+                }
+            }
+        });
+    }
 });
