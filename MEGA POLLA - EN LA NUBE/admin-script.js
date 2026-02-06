@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const aviso = p.notas_correccion ? `<div style="color:red; font-size:0.8em;">${p.notas_correccion}</div>` : "";
             li.innerHTML = `
                 <div style="flex-grow:1;">
-                    <strong>#${p.nro} - ${p.nombre}</strong> (${p.refe}) <br>
+                    <strong>#${p.nro} - ${p.nombre}</strong> (Refe: ${p.refe}) <br>
                     <small>${p.jugadas.join(', ')}</small>
                     ${aviso}
                 </div>
