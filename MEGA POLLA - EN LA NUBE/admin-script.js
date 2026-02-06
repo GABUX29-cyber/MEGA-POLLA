@@ -217,17 +217,34 @@ document.addEventListener('DOMContentLoaded', () => {
         else { alert("✅ Finanzas actualizadas."); cargarDatosDesdeNube(); }
     });
 
+    // CAMBIO APLICADO: Validación de resultado existente antes de insertar
     document.getElementById('form-resultados').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const sorteoHora = document.getElementById('sorteo-hora').value;
         let numRaw = document.getElementById('numero-ganador').value.trim();
         let numFinal = (numRaw === "0" || (parseInt(numRaw) === 0 && numRaw !== "00")) ? "O" : numRaw.padStart(2, '0');
 
+        // Verificar si ya existe el sorteo en la base de datos
+        const { data: existente } = await _supabase
+            .from('resultados')
+            .select('sorteo')
+            .eq('sorteo', sorteoHora)
+            .maybeSingle();
+
+        if (existente) {
+            alert(`🚫 Ya ingresaste un resultado para ${sorteoHora}.\n\nPara cambiarlo, búscalo abajo y dale a Editar o Eliminar.`);
+            return;
+        }
+
         const nuevoRes = {
-            sorteo: document.getElementById('sorteo-hora').value,
+            sorteo: sorteoHora,
             numero: numFinal
         };
         const { error } = await _supabase.from('resultados').insert([nuevoRes]);
-        if (!error) { e.target.reset(); cargarDatosDesdeNube(); }
+        if (!error) { 
+            e.target.reset(); 
+            cargarDatosDesdeNube(); 
+        }
     });
 
     document.getElementById('btn-procesar-pegado').addEventListener('click', () => {
@@ -358,16 +375,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReiniciar = document.getElementById('btn-reiniciar-datos');
     if (btnReiniciar) {
         btnReiniciar.addEventListener('click', async () => {
-            // PRIMER CANDADO: Confirmación visual
             const confirmar1 = confirm("⚠️ ATENCIÓN CRÍTICA:\n¿Estás totalmente seguro de borrar TODOS los participantes y resultados para iniciar una nueva semana?");
             
             if (confirmar1) {
-                // SEGUNDO CANDADO: Confirmación por palabra clave
                 const confirmacionTexto = prompt("Para confirmar la eliminación permanente, escribe la palabra: BORRAR");
 
                 if (confirmacionTexto === "BORRAR") {
                     try {
-                        // Borrar participantes y resultados en la nube
                         const { error: errP } = await _supabase.from('participantes').delete().gt('id', 0);
                         const { error: errR } = await _supabase.from('resultados').delete().gt('id', 0);
 
