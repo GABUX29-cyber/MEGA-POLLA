@@ -217,14 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
         else { alert("✅ Finanzas actualizadas."); cargarDatosDesdeNube(); }
     });
 
-    // CAMBIO APLICADO: Validación de resultado existente antes de insertar
     document.getElementById('form-resultados').addEventListener('submit', async (e) => {
         e.preventDefault();
         const sorteoHora = document.getElementById('sorteo-hora').value;
         let numRaw = document.getElementById('numero-ganador').value.trim();
         let numFinal = (numRaw === "0" || (parseInt(numRaw) === 0 && numRaw !== "00")) ? "O" : numRaw.padStart(2, '0');
 
-        // Verificar si ya existe el sorteo en la base de datos
         const { data: existente } = await _supabase
             .from('resultados')
             .select('sorteo')
@@ -354,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <small>${p.jugadas.join(', ')}</small>
                     ${aviso}
                 </div>
-                <div>
-                    <button class="btn-editar" onclick="editarParticipanteNube(${p.id}, '${p.nombre}', '${p.refe}', '${p.jugadas}')">✏️</button>
-                    <button class="btn-eliminar" onclick="eliminarParticipanteNube(${p.id})">🗑️</button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-editar" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="editarParticipanteNube(${p.id}, '${p.nombre}', '${p.refe}', '${p.jugadas}')">Editar</button>
+                    <button class="btn-eliminar" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="eliminarParticipanteNube(${p.id})">Eliminar</button>
                 </div>`;
             listaPart.appendChild(li);
         });
@@ -370,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------------------------------------------------
-    // --- 6. FUNCIÓN DE REINICIO CON DOBLE CANDADO (AÑADIDA) ---
+    // --- 6. FUNCIÓN DE REINICIO CON DOBLE CANDADO ---
     // ---------------------------------------------------------------------------------------
     const btnReiniciar = document.getElementById('btn-reiniciar-datos');
     if (btnReiniciar) {
